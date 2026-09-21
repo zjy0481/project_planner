@@ -1,0 +1,281 @@
+{
+  "generator": "project-planner/build_plan.py",
+  "version": 1,
+  "title": "本地优先待办应用",
+  "summary": "交付带持久化、筛选、JSON 导入和隐私说明的离线待办应用。",
+  "unit": "工作日",
+  "assumptions": [
+    "浏览器支持 localStorage 与 File API",
+    "工期包含实现、测试、评审和合并"
+  ],
+  "risks": [
+    "外部隐私审查晚于 T+4 会推迟发布",
+    "异常大的导入文件可能影响浏览器响应速度"
+  ],
+  "requirements": [
+    {
+      "id": "R1",
+      "text": "创建、标记完成、删除待办项并在本地持久化",
+      "source": "requirements.md"
+    },
+    {
+      "id": "R2",
+      "text": "按完成状态筛选",
+      "source": "requirements.md"
+    },
+    {
+      "id": "R3",
+      "text": "安全导入 JSON 且错误不破坏现有数据",
+      "source": "requirements.md"
+    },
+    {
+      "id": "R4",
+      "text": "隐私审查与本地数据说明",
+      "source": "requirements.md"
+    }
+  ],
+  "max_parallel": 2,
+  "scheduling": {
+    "strategy": "deterministic_topological_list_scheduling",
+    "priority": "input_order",
+    "dependency_release": "finish",
+    "resource_semantics": "exact_string_exclusive_for_task_kind",
+    "capacity_semantics": "bounded_task_kind_only",
+    "optimality": "heuristic_not_globally_optimal",
+    "makespan": 6.0
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "定义数据契约",
+      "description": "定义待办实体、存储版本和导入格式。",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "duration": 1,
+      "depends_on": [],
+      "resources": [
+        "architecture"
+      ],
+      "deliverable": "版本化数据契约与示例",
+      "acceptance": [
+        "字段和迁移规则有测试",
+        "无效输入契约明确"
+      ],
+      "estimate_basis": "小型契约设计、单元测试和评审",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "仅数据类型、验证器和契约测试",
+      "input_index": 0,
+      "status": "scheduled",
+      "start": 0.0,
+      "finish": 1.0,
+      "blocked_by": []
+    },
+    {
+      "id": "T2",
+      "title": "实现本地存储",
+      "description": "实现待办项的创建、标记完成、删除和 localStorage 持久化。",
+      "requirement_ids": [
+        "R1"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "T1"
+      ],
+      "resources": [
+        "storage-schema"
+      ],
+      "deliverable": "本地存储适配器",
+      "acceptance": [
+        "刷新后数据保留",
+        "创建、标记完成和删除测试通过"
+      ],
+      "estimate_basis": "适配器实现、迁移测试和评审",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "存储层及其测试，不包含 UI",
+      "input_index": 1,
+      "status": "scheduled",
+      "start": 1.0,
+      "finish": 3.0,
+      "blocked_by": []
+    },
+    {
+      "id": "T3",
+      "title": "构建列表与筛选",
+      "description": "基于 T1 冻结的数据接口和内存 mock，实现创建、完成、删除及三种筛选状态，使 UI PR 可独立评审合并。",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "T1"
+      ],
+      "resources": [
+        "frontend-shell"
+      ],
+      "deliverable": "可操作的待办列表",
+      "acceptance": [
+        "创建、完成和删除可通过内存 mock 独立工作",
+        "三种筛选结果正确",
+        "键盘操作可用"
+      ],
+      "estimate_basis": "组件、交互测试、可访问性检查和评审",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "列表和筛选 UI，不改存储契约",
+      "input_index": 2,
+      "status": "scheduled",
+      "start": 1.0,
+      "finish": 4.0,
+      "blocked_by": []
+    },
+    {
+      "id": "T4",
+      "title": "实现 JSON 导入",
+      "description": "先验证完整文件，再以事务方式写入。",
+      "requirement_ids": [
+        "R3"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "T2"
+      ],
+      "resources": [
+        "storage-schema"
+      ],
+      "deliverable": "JSON 导入流程",
+      "acceptance": [
+        "错误文件有明确消息",
+        "失败时原数据不变"
+      ],
+      "estimate_basis": "文件读取、验证、回滚测试和评审",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "导入服务、入口和错误处理",
+      "input_index": 3,
+      "status": "scheduled",
+      "start": 3.0,
+      "finish": 5.0,
+      "blocked_by": []
+    },
+    {
+      "id": "E1",
+      "title": "外部隐私审查",
+      "description": "外部团队确认本地数据声明和浏览器存储使用。",
+      "requirement_ids": [
+        "R4"
+      ],
+      "duration": 0,
+      "depends_on": [
+        "T2"
+      ],
+      "resources": [],
+      "deliverable": "隐私审查结论",
+      "acceptance": [
+        "审查结论已记录"
+      ],
+      "estimate_basis": "外部团队承诺在 T+4 提供",
+      "kind": "external",
+      "external_ready": 4,
+      "pr_scope": "无代码 PR；记录外部结论",
+      "input_index": 4,
+      "status": "scheduled",
+      "start": 4.0,
+      "finish": 4.0,
+      "blocked_by": []
+    },
+    {
+      "id": "T5",
+      "title": "加入隐私说明",
+      "description": "根据审查结论加入产品内隐私说明。",
+      "requirement_ids": [
+        "R4"
+      ],
+      "duration": 1,
+      "depends_on": [
+        "E1",
+        "T3"
+      ],
+      "resources": [
+        "frontend-shell"
+      ],
+      "deliverable": "产品内隐私说明",
+      "acceptance": [
+        "文案与审查结论一致",
+        "入口可访问"
+      ],
+      "estimate_basis": "文案集成、UI 测试和评审",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "隐私说明页面和入口",
+      "input_index": 5,
+      "status": "scheduled",
+      "start": 4.0,
+      "finish": 5.0,
+      "blocked_by": []
+    },
+    {
+      "id": "T6",
+      "title": "端到端验收",
+      "description": "将 T3 UI 接入 T2 真实存储适配器，并覆盖存储、筛选、导入和隐私说明的核心路径。",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "duration": 1,
+      "depends_on": [
+        "T3",
+        "T4",
+        "T5"
+      ],
+      "resources": [
+        "release-env"
+      ],
+      "deliverable": "已联调应用与验收记录",
+      "acceptance": [
+        "UI 使用真实存储完成创建、刷新、完成和删除",
+        "所有核心路径通过",
+        "无阻断缺陷"
+      ],
+      "estimate_basis": "端到端执行、缺陷复核和评审",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "UI 与真实存储接线、端到端测试及发布检查",
+      "input_index": 6,
+      "status": "scheduled",
+      "start": 5.0,
+      "finish": 6.0,
+      "blocked_by": []
+    },
+    {
+      "id": "M1",
+      "title": "版本可发布",
+      "description": "所有验收完成后的发布里程碑。",
+      "requirement_ids": [],
+      "duration": 0,
+      "depends_on": [
+        "T6"
+      ],
+      "resources": [],
+      "deliverable": "发布决策",
+      "acceptance": [
+        "T6 已完成"
+      ],
+      "estimate_basis": "零工期决策点",
+      "kind": "milestone",
+      "external_ready": null,
+      "pr_scope": "无独立 PR",
+      "input_index": 7,
+      "status": "scheduled",
+      "start": 6.0,
+      "finish": 6.0,
+      "blocked_by": []
+    }
+  ]
+}
