@@ -36,7 +36,17 @@ Reading or editing this README is not an installation request. An agent must not
 
 ## For humans: use the skill and inspect its outputs
 
-The skill reads the complete requirements document, traces each requirement to tasks, distinguishes delivery dependencies from exact-string resource locks, and schedules ordinary tasks under `max_parallel`. Unknown external readiness blocks that event and its descendants; unrelated work can still be scheduled. The list scheduler is deterministic in input order, but it is not a globally optimal scheduler.
+Provide a requirements document and the skill will break it into small tasks that can each be developed, tested, and reviewed as a PR. The plan shows what each task delivers, how its workload compares with others, which tasks can run together, and which must wait for earlier work.
+
+### What does the timeline mean?
+
+The chart uses relative positions such as `T+0` and `T+1` to show workload and ordering. One unit has no fixed equivalent in hours or working days. Actual elapsed time depends on development speed, staffing, and waiting, so the skill does not predict how many days the project will take.
+
+Choose a small reference task as 1 relative work unit, then estimate other tasks by comparison. If A involves roughly twice the work of B, assign A 2 units and B 1 unit. When B depends on A, A can span `T+0 → T+2` and B `T+2 → T+3`. When they are independent and capacity and resources allow, both can start at `T+0`.
+
+Bar length compares approximate workload; positions and arrows show the development order. Rough proportions are enough, and a bar twice as long does not imply twice the real elapsed time. External prerequisites are shown separately: unknown readiness blocks dependent work, while any supplied relative readiness position is an explicit planning assumption.
+
+### Start a plan
 
 The runtime needs Python 3.10 or newer and uses only the Python standard library. Invoke it explicitly, for example:
 
@@ -53,7 +63,7 @@ On success, the generator creates four files from one schedule object:
 - `gantt.svg`: a static chart suitable for embedding; and
 - `gantt.html`: an offline, self-contained interactive chart.
 
-The generated plan and chart text are Chinese. The repository's sample output is available here:
+Start with `gantt.html` to compare workload and see parallel tasks and dependencies; click a task for its details. Read `plan.md` for deliverables, acceptance criteria, and estimation assumptions. The generated plan and chart text are Chinese. The repository's sample output is available here:
 
 ![Example Gantt chart](demo/gantt.svg)
 
@@ -61,7 +71,12 @@ The generated plan and chart text are Chinese. The repository's sample output is
 
 GitHub displays `demo/gantt.html` as source. Download it and open it locally to use its interactive task details.
 
-The full workflow also records its audit evidence in `review.md`. The standalone Python command below only rebuilds the four generated artifacts from an existing plan JSON; it does not interpret a requirements document or invoke the AI reviewer.
+The full workflow also records its audit evidence in `review.md`. The plan accounts for dependencies, shared people or environments, and the number of tasks that can run together. Unknown external readiness blocks that event and its descendants; unrelated work can still be scheduled. The scheduler uses input order consistently, but does not guarantee the best possible arrangement.
+
+<details>
+<summary>Developers: rebuild the sample and run tests</summary>
+
+The standalone Python command below only rebuilds the four generated artifacts from an existing plan JSON; it does not interpret a requirements document or invoke the AI reviewer.
 
 To reproduce the sample with an output directory separate from the input fixture:
 
@@ -71,3 +86,5 @@ python -X utf8 -m unittest discover -s tests -v
 ```
 
 The generator refuses to overwrite a non-generated file with the same output name. Read `project-planner/references/schema.md` for the complete input contract and `project-planner/SKILL.md` for the workflow boundaries.
+
+</details>
