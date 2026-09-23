@@ -1,0 +1,9 @@
+/AGENTS.md
+.codex/
+__pycache__/
+*.py[cod]
+
+# Local development and review records
+/PAUSED.md
+/demo/review*.md
+/demo/review-snapshot*.json

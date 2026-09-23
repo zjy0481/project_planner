@@ -1,0 +1,7 @@
+interface:
+  display_name: "项目规划器"
+  short_description: "把需求拆成独立 PR 任务并生成相对时间甘特图与中文规划文档"
+  default_prompt: "使用 $project-planner 读取这份需求文档，生成经过独立审查的本地项目计划。"
+
+policy:
+  allow_implicit_invocation: false
