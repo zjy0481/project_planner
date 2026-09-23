@@ -379,8 +379,9 @@ def render_markdown(schedule: dict[str, Any]) -> str:
     capacity = "未知；排程按无容量上限处理" if schedule["max_parallel"] is None else str(schedule["max_parallel"])
     lines = [
         f"<!-- {GENERATED_MARKER} -->", "", "# 项目计划", "", f"**标题：** {_md(schedule['title'])}", "",
-        f"**摘要：** {_md(schedule['summary'])}", "", f"**时间单位：** {_md(schedule['unit'])}", "",
-        f"**并行容量：** {capacity}", "", "排程使用输入任务顺序作为稳定优先级，依赖在前置任务完成时释放；结果是确定性的列表调度，不保证全局最优。",
+        f"**摘要：** {_md(schedule['summary'])}", "", f"**工作量单位：** {_md(schedule['unit'])}", "",
+        f"**并行容量：** {capacity}", "", "任务工作量为粗略估算；`T+N` 表示相对位置，不换算为小时、工作日或实际工期。普通任务条长表示工作量；阻塞任务的整行条纹只表示状态。",
+        "", "排程使用输入任务顺序作为稳定优先级，依赖在前置任务结束时释放；结果是确定性的列表调度，不保证全局最优。",
         "", "## 假设", "",
     ]
     lines.extend(f"- {_md(item)}" for item in schedule["assumptions"] or ["无"])
@@ -392,9 +393,9 @@ def render_markdown(schedule: dict[str, Any]) -> str:
         lines.append(f"| {_md(req['id'])} | {_md(req['text'])} | {_md(req['source'])} | {_list_or_none(covered)} |")
     if not schedule["requirements"]:
         lines.append("| — | 无 | — | — |")
-    lines.extend(["", "## 排程", "", "| 任务 | 类型 | 开始 | 完成 | 工期 | 依赖 | 资源 | 状态 |", "| --- | --- | ---: | ---: | ---: | --- | --- | --- |"])
+    lines.extend(["", "## 相对工作量排程", "", "| 任务 | 类型 | 相对起点 | 相对终点 | 工作量 | 依赖 | 资源 | 状态 |", "| --- | --- | ---: | ---: | ---: | --- | --- | --- |"])
     for task in schedule["tasks"]:
-        status = "阻塞（未知外部就绪时间：" + _list_or_none(task["blocked_by"]) + "）" if task["status"] == "blocked" else "已排程"
+        status = "阻塞（外部条件待确认：" + _list_or_none(task["blocked_by"]) + "）" if task["status"] == "blocked" else "已排程"
         lines.append(
             f"| {_md(task['id'])} · {_md(task['title'])} | {task['kind']} | {_fmt_time(task['start'])} | "
             f"{_fmt_time(task['finish'])} | {_md(task['duration'])} | {_list_or_none(task['depends_on'])} | "
@@ -426,15 +427,15 @@ def render_svg(schedule: dict[str, Any], *, standalone: bool = True) -> str:
     prefix = f'<?xml version="1.0" encoding="UTF-8"?>\n<!-- {GENERATED_MARKER} -->\n' if standalone else f'<!-- {GENERATED_MARKER} -->\n'
     parts = [prefix, f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-labelledby="chart-title chart-desc">',
              '<title id="chart-title">项目甘特图</title>',
-             f'<desc id="chart-desc">{esc(schedule["title"])}。相对时间排程；阻塞任务没有虚构日期。</desc>',
+             f'<desc id="chart-desc">{esc(schedule["title"])}。条长表示粗略相对工作量，横轴只表示抽象相对顺序，不对应现实时间；阻塞任务没有虚构相对偏移。</desc>',
              '<defs><linearGradient id="bg" x2="0" y2="1"><stop stop-color="#f8fafc"/><stop offset="1" stop-color="#eef2ff"/></linearGradient>',
              '<pattern id="blocked" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#fee2e2"/><line y2="8" stroke="#ef4444" stroke-width="2"/></pattern>',
              '<filter id="shadow"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity=".18"/></filter>',
              '<marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#64748b"/></marker></defs>',
              f'<rect width="{width}" height="{height}" rx="18" fill="url(#bg)"/>',
              f'<text x="28" y="38" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="700" fill="#0f172a">{esc(schedule["title"])}</text>',
-             f'<text x="28" y="66" font-family="Segoe UI,Arial,sans-serif" font-size="13" fill="#475569">单位：{esc(schedule["unit"])} · 列表调度（不保证全局最优）</text>',
-             '<g font-family="Segoe UI,Arial,sans-serif" font-size="12"><circle cx="30" cy="92" r="6" fill="#2563eb"/><text x="42" y="96" fill="#334155">任务</text><rect x="100" y="86" width="12" height="12" transform="rotate(45 106 92)" fill="#7c3aed"/><text x="120" y="96" fill="#334155">里程碑</text><circle cx="194" cy="92" r="6" fill="#0d9488"/><text x="206" y="96" fill="#334155">外部项</text><rect x="268" y="86" width="18" height="12" fill="url(#blocked)"/><text x="294" y="96" fill="#334155">阻塞</text></g>']
+             f'<text x="28" y="66" font-family="Segoe UI,Arial,sans-serif" font-size="13" fill="#475569">工作量单位：{esc(schedule["unit"])} · 条长=粗略工作量 · 横轴=相对位置 · 不代表实际工期</text>',
+             '<g font-family="Segoe UI,Arial,sans-serif" font-size="12"><circle cx="30" cy="92" r="6" fill="#2563eb"/><text x="42" y="96" fill="#334155">任务（条长=工作量）</text><rect x="170" y="86" width="12" height="12" transform="rotate(45 176 92)" fill="#7c3aed"/><text x="190" y="96" fill="#334155">里程碑</text><circle cx="264" cy="92" r="6" fill="#0d9488"/><text x="276" y="96" fill="#334155">外部项</text><rect x="338" y="86" width="18" height="12" fill="url(#blocked)"/><text x="364" y="96" fill="#334155">阻塞状态（整行背景）</text></g>']
     ticks = min(10, max(2, int(math.ceil(makespan))))
     for i in range(ticks + 1):
         value = makespan * i / ticks
@@ -453,7 +454,7 @@ def render_svg(schedule: dict[str, Any], *, standalone: bool = True) -> str:
         if task["status"] == "blocked":
             x, bar_width = left + 8, plot_width - 16
             parts.append(f'<rect x="{x}" y="{y+13}" width="{bar_width}" height="28" rx="7" fill="url(#blocked)"/>')
-            parts.append(f'<text x="{x+12}" y="{y+32}" font-family="Segoe UI,Arial,sans-serif" font-size="12" font-weight="600" fill="#991b1b">阻塞：等待 {esc(", ".join(task["blocked_by"]))} 的外部就绪时间</text>')
+            parts.append(f'<text x="{x+12}" y="{y+32}" font-family="Segoe UI,Arial,sans-serif" font-size="12" font-weight="600" fill="#991b1b">阻塞：外部条件待确认（{esc(", ".join(task["blocked_by"]))}）</text>')
             positions[task["id"]] = (x, y + 27)
         elif task["duration"] == 0:
             x = x_at(task["start"])
@@ -477,7 +478,7 @@ def render_svg(schedule: dict[str, Any], *, standalone: bool = True) -> str:
             positions[task["id"]] = (x2, y + 27)
         details = f"需求 {', '.join(task['requirement_ids']) or '无'} · 资源 {', '.join(task['resources']) or '无'}"
         parts.append(f'<text x="{left+plot_width+18}" y="{y+22}" font-family="Segoe UI,Arial,sans-serif" font-size="11" fill="#334155">{esc(details[:34])}</text>')
-        parts.append(f'<text x="{left+plot_width+18}" y="{y+39}" font-family="Segoe UI,Arial,sans-serif" font-size="10" fill="#64748b">工期 {esc(task["duration"])}</text></g>')
+        parts.append(f'<text x="{left+plot_width+18}" y="{y+39}" font-family="Segoe UI,Arial,sans-serif" font-size="10" fill="#64748b">工作量 {esc(task["duration"])}</text></g>')
     task_by_id = {task["id"]: task for task in tasks}
     for task in tasks:
         if task["status"] != "scheduled":
@@ -493,7 +494,7 @@ def render_svg(schedule: dict[str, Any], *, standalone: bool = True) -> str:
             bend = max(parent_x + 8, child_x - 12)
             parts.append(f'<path d="M {parent_x:.2f} {parent_y:.2f} H {bend:.2f} V {child_y:.2f} H {child_x-4:.2f}" fill="none" stroke="#64748b" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#arrow)" opacity=".78"/>')
     blocked_count = sum(task["status"] == "blocked" for task in tasks)
-    note = f"{blocked_count} 个任务因未知外部就绪时间而阻塞" if blocked_count else f"计划完成：{_fmt_time(schedule['scheduling']['makespan'])}"
+    note = f"{blocked_count} 个任务因外部条件待确认而阻塞" if blocked_count else f"相对排程跨度：{_fmt_time(schedule['scheduling']['makespan'])}"
     parts.append(f'<text x="28" y="{height-28}" font-family="Segoe UI,Arial,sans-serif" font-size="12" fill="#475569">{esc(note)} · 箭头表示完成后依赖</text></svg>')
     return "".join(parts)
 
@@ -504,20 +505,20 @@ def render_html(schedule: dict[str, Any]) -> str:
     svg = render_svg(schedule, standalone=False)
     capacity = "未知（按无上限排程）" if schedule["max_parallel"] is None else str(schedule["max_parallel"])
     blocked = any(task["status"] == "blocked" for task in schedule["tasks"])
-    completion = (f"可排程部分至 {_fmt_time(schedule['scheduling']['makespan'])}，整体完成未知"
-                  if blocked else _fmt_time(schedule["scheduling"]["makespan"]))
+    completion = (f"可排程相对终点 {_fmt_time(schedule['scheduling']['makespan'])}，整体相对终点未知"
+                  if blocked else f"相对终点 {_fmt_time(schedule['scheduling']['makespan'])}")
     return f'''<!doctype html>
 <!-- {GENERATED_MARKER} -->
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{_html(schedule["title"])}</title><style>
 :root{{--ink:#0f172a;--muted:#64748b;--panel:#fff;--accent:#2563eb}}*{{box-sizing:border-box}}body{{margin:0;background:#e9eef7;color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif}}main{{max-width:1320px;margin:auto;padding:32px}}header,.card{{background:rgba(255,255,255,.94);border:1px solid #dbe4f0;border-radius:18px;box-shadow:0 12px 38px #1e3a5f18}}header{{padding:28px}}h1{{margin:0 0 10px;font-size:30px}}p{{line-height:1.65}}.meta{{display:flex;gap:10px;flex-wrap:wrap}}.pill{{background:#eff6ff;color:#1d4ed8;padding:7px 11px;border-radius:999px;font-size:13px}}.card{{margin-top:20px;padding:20px}}.chart{{overflow:auto}}svg{{width:100%;min-width:1050px;height:auto}}.task-row{{cursor:pointer}}.task-row:hover{{opacity:.78}}.grid{{display:grid;grid-template-columns:1fr 1fr;gap:18px}}ul{{padding-left:22px}}table{{border-collapse:collapse;width:100%}}th,td{{padding:10px;text-align:left;border-bottom:1px solid #e2e8f0;vertical-align:top}}th{{color:#475569;font-size:12px;text-transform:uppercase}}button{{font:inherit;border:0;border-radius:8px;padding:8px 12px;background:#e2e8f0;cursor:pointer}}dialog{{max-width:700px;width:calc(100% - 40px);border:0;border-radius:18px;padding:24px;box-shadow:0 24px 80px #0f172a55}}dialog::backdrop{{background:#0f172a88}}.detail-grid{{display:grid;grid-template-columns:130px 1fr;gap:8px 14px}}.detail-grid dt{{font-weight:700;color:#475569}}.detail-grid dd{{margin:0;white-space:pre-wrap}}@media(max-width:800px){{main{{padding:14px}}.grid{{grid-template-columns:1fr}}}}
-</style></head><body><main><header><h1>{_html(schedule["title"])}</h1><p>{_html(schedule["summary"])}</p><div class="meta"><span class="pill">单位：{_html(schedule["unit"])}</span><span class="pill">并行容量：{_html(capacity)}</span><span class="pill">进度：{_html(completion)}</span></div></header>
+</style></head><body><main><header><h1>{_html(schedule["title"])}</h1><p>{_html(schedule["summary"])}</p><p>任务工作量为粗略估算；T+N 表示相对位置，不换算为小时、工作日或实际工期。条长表示工作量；阻塞任务的整行条纹只表示状态。</p><div class="meta"><span class="pill">工作量单位：{_html(schedule["unit"])}</span><span class="pill">并行容量：{_html(capacity)}</span><span class="pill">相对排程：{_html(completion)}</span></div></header>
 <section class="card chart" aria-label="甘特图">{svg}</section>
 <section class="grid"><div class="card"><h2>假设</h2><ul>{''.join('<li>'+_html(x)+'</li>' for x in schedule['assumptions']) or '<li>无</li>'}</ul></div><div class="card"><h2>风险</h2><ul>{''.join('<li>'+_html(x)+'</li>' for x in schedule['risks']) or '<li>无</li>'}</ul></div></section>
 <section class="card"><h2>需求覆盖</h2><table><thead><tr><th>ID</th><th>需求</th><th>来源</th><th>覆盖任务</th></tr></thead><tbody>{''.join('<tr><td>'+_html(r['id'])+'</td><td>'+_html(r['text'])+'</td><td>'+_html(r['source'])+'</td><td>'+_html(', '.join(t['id'] for t in schedule['tasks'] if r['id'] in t['requirement_ids']))+'</td></tr>' for r in schedule['requirements']) or '<tr><td colspan="4">无需求</td></tr>'}</tbody></table></section>
 <dialog id="details"><form method="dialog"><button style="float:right">关闭</button></form><h2 id="d-title"></h2><dl class="detail-grid" id="d-grid"></dl></dialog>
 <script type="application/json" id="plan-data">{embedded}</script><script>
-const plan=JSON.parse(document.getElementById('plan-data').textContent);const dlg=document.getElementById('details');const labels=[['状态','status'],['开始','start'],['完成','finish'],['描述','description'],['交付物','deliverable'],['验收','acceptance'],['PR 边界','pr_scope'],['需求','requirement_ids'],['依赖','depends_on'],['资源锁','resources'],['估算依据','estimate_basis']];
+const plan=JSON.parse(document.getElementById('plan-data').textContent);const dlg=document.getElementById('details');const labels=[['状态','status'],['相对起点','start'],['相对终点','finish'],['工作量','duration'],['描述','description'],['交付物','deliverable'],['验收','acceptance'],['PR 边界','pr_scope'],['需求','requirement_ids'],['依赖','depends_on'],['资源锁','resources'],['估算依据','estimate_basis']];
 const display=(key,value)=>{{if(key==='status')return value==='scheduled'?'已排程':'阻塞';if(key==='start'||key==='finish')return value==null?'—':'T+'+String(value);return Array.isArray(value)?value.join('、')||'无':String(value??'无')}};
 document.querySelectorAll('.task-row').forEach(row=>row.addEventListener('click',()=>{{const t=plan.tasks.find(x=>x.id===row.dataset.taskId);document.getElementById('d-title').textContent=t.id+' · '+t.title;const grid=document.getElementById('d-grid');grid.replaceChildren();for(const [label,key] of labels){{const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=display(key,t[key]);grid.append(dt,dd)}}dlg.showModal()}}));
 </script></main></body></html>'''

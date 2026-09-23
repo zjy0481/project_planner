@@ -41,7 +41,7 @@ def plan(tasks, max_parallel=None, requirements=None, **changes):
         "version": 1,
         "title": "测试计划",
         "summary": "验证排程",
-        "unit": "工作日",
+        "unit": "相对工作单位",
         "assumptions": [],
         "risks": [],
         "requirements": requirements or [],
@@ -131,6 +131,18 @@ class SchedulingTests(unittest.TestCase):
         self.assertEqual(result["B"]["start"], 1e-12)
         self.assertEqual(build_plan._fmt_time(result["B"]["start"]), "T+1e-12")
 
+    def test_workload_ratios_and_relative_external_ready_share_one_axis(self):
+        result = self.by_id(schedule(plan([
+            task("REFERENCE", 1),
+            task("DOUBLE", 2),
+            task("TRIPLE", 3),
+            task("READY", 0, kind="external", ready=4),
+        ], max_parallel=1)))
+        self.assertEqual((result["REFERENCE"]["start"], result["REFERENCE"]["finish"]), (0, 1))
+        self.assertEqual((result["DOUBLE"]["start"], result["DOUBLE"]["finish"]), (1, 3))
+        self.assertEqual((result["TRIPLE"]["start"], result["TRIPLE"]["finish"]), (3, 6))
+        self.assertEqual((result["READY"]["start"], result["READY"]["finish"]), (4, 4))
+
 
 class ValidationTests(unittest.TestCase):
     def assert_invalid(self, raw, text):
@@ -203,8 +215,8 @@ class ArtifactTests(unittest.TestCase):
     def test_blocked_html_does_not_claim_whole_plan_completion(self):
         result = schedule(plan([task("E", 0, kind="external", ready=None), task("A", 1)]))
         html_text = build_plan.render_html(result)
-        self.assertIn("整体完成未知", html_text)
-        self.assertIn("可排程部分至 T+1", html_text)
+        self.assertIn("整体相对终点未知", html_text)
+        self.assertIn("可排程相对终点 T+1", html_text)
 
     def test_refuses_non_generated_target_and_input_collision(self):
         raw = plan([task("A")])
