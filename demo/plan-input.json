@@ -2,13 +2,13 @@
   "version": 1,
   "title": "本地优先待办应用",
   "summary": "交付带持久化、筛选、JSON 导入和隐私说明的离线待办应用。",
-  "unit": "工作日",
+  "unit": "相对工作单位",
   "assumptions": [
     "浏览器支持 localStorage 与 File API",
-    "工期包含实现、测试、评审和合并"
+    "T1 为 1 个相对工作单位参照；其余任务数字只作粗略比例，工作量包含实现、测试、评审和合并"
   ],
   "risks": [
-    "外部隐私审查晚于 T+4 会推迟发布",
+    "本示例假设隐私审查在相对轴 T+4 就绪；若条件未满足，后续任务仍需等待。这不是日期承诺",
     "异常大的导入文件可能影响浏览器响应速度"
   ],
   "requirements": [
@@ -51,7 +51,7 @@
       "id": "E1", "title": "外部隐私审查", "description": "外部团队确认本地数据声明和浏览器存储使用。",
       "requirement_ids": ["R4"], "duration": 0, "depends_on": ["T2"], "resources": [],
       "deliverable": "隐私审查结论", "acceptance": ["审查结论已记录"],
-      "estimate_basis": "外部团队承诺在 T+4 提供", "kind": "external", "external_ready": 4,
+      "estimate_basis": "外部团队在相对轴 T+4 提供；这是情景假设，不代表外部承诺日期", "kind": "external", "external_ready": 4,
       "pr_scope": "无代码 PR；记录外部结论"
     },
     {
@@ -72,7 +72,7 @@
       "id": "M1", "title": "版本可发布", "description": "所有验收完成后的发布里程碑。",
       "requirement_ids": [], "duration": 0, "depends_on": ["T6"], "resources": [],
       "deliverable": "发布决策", "acceptance": ["T6 已完成"],
-      "estimate_basis": "零工期决策点", "kind": "milestone", "external_ready": null,
+      "estimate_basis": "零工作量决策点", "kind": "milestone", "external_ready": null,
       "pr_scope": "无独立 PR"
     }
   ]
