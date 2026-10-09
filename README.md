@@ -28,6 +28,17 @@ An installer may choose an environment-configured legacy `.codex/skills` destina
 
 An agent must not install or alter an installation without an explicit user request. After an authorized install, verify the directory name, the explicit-only invocation policy, that the generator's `--help` command succeeds, that skill discovery sees the skill, and the reported installation path.
 
+Also verify that both built-in locale baselines can produce valid snapshots. Keep the temporary output outside the installed skill directory:
+
+Keep the skill's hidden `.gitattributes` file when copying the directory. It fixes the three fingerprinted source files to LF on Git checkout; converting those files to CRLF invalidates the raw-byte baseline even if their text is unchanged.
+
+```text
+python -X utf8 "<skill-dir>/scripts/localization.py" snapshot --language en --output "<temporary-dir>/project-planner-en-snapshot.json" --skill-dir "<skill-dir>"
+python -X utf8 "<skill-dir>/scripts/localization.py" snapshot --language zh-CN --output "<temporary-dir>/project-planner-zh-CN-snapshot.json" --skill-dir "<skill-dir>"
+```
+
+Each command must exit successfully and create its snapshot. If either fails, treat the installation's built-in source baseline as unavailable; report the failure instead of changing source hashes or review evidence.
+
 ## Use the skill
 
 Provide a requirements document and invoke `$project-planner`, for example:

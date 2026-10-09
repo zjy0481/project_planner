@@ -28,6 +28,17 @@ URL 中的 `/tree/dev/` 不可省略；省略后安装器可能选用默认分�
 
 用户未明确要求安装时，代理不得自行安装或更改安装目录。经授权安装后，应检查安装目录名称、`policy.allow_implicit_invocation: false` 是否保留、生成器的 `--help` 是否成功、技能发现是否能看到该技能，以及准确安装路径。
 
+还应验证两种内置语言都能生成有效快照。临时输出请放在技能安装目录之外：
+
+复制目录时请保留技能内隐藏的 `.gitattributes` 文件。它将三份指纹来源的 Git 检出换行固定为 LF；手动转成 CRLF 会使原始字节基线失效，即使文本内容未变。
+
+```text
+python -X utf8 "<skill-dir>/scripts/localization.py" snapshot --language en --output "<temporary-dir>/project-planner-en-snapshot.json" --skill-dir "<skill-dir>"
+python -X utf8 "<skill-dir>/scripts/localization.py" snapshot --language zh-CN --output "<temporary-dir>/project-planner-zh-CN-snapshot.json" --skill-dir "<skill-dir>"
+```
+
+两个命令都必须成功退出并创建快照。任一命令失败，都表示安装副本的内置来源基线当前不可用；请报告失败，不要改写源哈希或审查证据。
+
 ## 使用技能
 
 提供需求文档并显式调用 `$project-planner`，例如：
