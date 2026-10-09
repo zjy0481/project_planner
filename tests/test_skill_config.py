@@ -22,6 +22,26 @@ SPEC.loader.exec_module(skill_config)
 
 
 class SkillConfigTests(unittest.TestCase):
+    def test_grandfathered_language_preferences_normalize_without_rewriting_on_read(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / "tests") as directory:
+            config_path = Path(directory) / "config.json"
+            for supplied, expected in (("i-klingon", "tlh"), ("en-GB-oed", "en-GB-oxendict"),
+                                       ("art-lojban", "jbo"), ("i-default", "i-default")):
+                with self.subTest(language=supplied):
+                    config_path.write_text(json.dumps({"language": supplied, "custom": True}), encoding="utf-8")
+                    before = config_path.read_bytes()
+                    self.assertEqual(skill_config.read_config(config_path)["language"], expected)
+                    self.assertEqual(config_path.read_bytes(), before)
+                    saved = subprocess.run(
+                        [sys.executable, "-X", "utf8", str(SCRIPT), "--config", str(config_path),
+                         "set", "--language", supplied, "--confirmed"],
+                        cwd=ROOT, text=True, capture_output=True,
+                    )
+                    self.assertEqual(saved.returncode, 0, saved.stderr)
+                    result = json.loads(config_path.read_text(encoding="utf-8"))
+                    self.assertEqual(result["language"], expected)
+                    self.assertTrue(result["custom"])
+
     def test_missing_file_returns_defaults_without_creating_it(self):
         with tempfile.TemporaryDirectory(dir=ROOT / "tests") as directory:
             config_path = Path(directory) / "missing" / "config.json"

@@ -130,7 +130,8 @@ class LocalizationTests(unittest.TestCase):
             "en-u-ca-x",
             "en-a-aa-a-bb",
             "sl-rozaj-ROZAJ",
-            "i-klingon",
+            "i-not-registered",
+            "i-klingon-x-private",
             "en\" onload=\"alert(1)",
         ]
         for supplied in invalid:
@@ -146,6 +147,44 @@ class LocalizationTests(unittest.TestCase):
         ).hexdigest()
         self.assertEqual(localization.messages_hash(first), expected)
         self.assertEqual(localization.messages_hash(first), localization.messages_hash(reordered))
+
+    def test_all_grandfathered_tags_use_verified_preferred_values(self):
+        expected = {
+            "art-lojban": "jbo", "cel-gaulish": "cel-gaulish",
+            "en-GB-oed": "en-GB-oxendict", "i-ami": "ami", "i-bnn": "bnn",
+            "i-default": "i-default", "i-enochian": "i-enochian", "i-hak": "hak",
+            "i-klingon": "tlh", "i-lux": "lb", "i-mingo": "i-mingo", "i-navajo": "nv",
+            "i-pwn": "pwn", "i-tao": "tao", "i-tay": "tay", "i-tsu": "tsu",
+            "no-bok": "nb", "no-nyn": "nn", "sgn-BE-FR": "sfb", "sgn-BE-NL": "vgt",
+            "sgn-CH-DE": "sgg", "zh-guoyu": "cmn", "zh-hakka": "hak", "zh-min": "zh-min",
+            "zh-min-nan": "nan", "zh-xiang": "hsn",
+        }
+        for supplied, preferred in expected.items():
+            with self.subTest(tag=supplied):
+                self.assertEqual(localization.normalize_language(supplied), preferred)
+                self.assertEqual(localization.normalize_language(supplied.upper()), preferred)
+                self.assertEqual(localization.normalize_language(preferred), preferred)
+        # Preferred-Value processing is deliberately limited to whole
+        # grandfathered tags; private-use strings and ordinary subtags retain identity.
+        self.assertEqual(localization.normalize_language("x-i-klingon"), "x-i-klingon")
+        self.assertEqual(localization.normalize_language("iw-IL"), "iw-IL")
+
+    def test_grandfathered_alias_uses_modern_bundle_and_preserves_old_snapshot(self):
+        messages, review = self._candidate()
+        published = localization.publish(messages, review, "art-lojban", skill_dir=self.skill_dir)
+        self.assertEqual(published.name, "jbo.json")
+        self.assertEqual(localization.get_bundle("ART-LOJBAN", skill_dir=self.skill_dir)["language"], "jbo")
+        historic = localization.make_bundle(messages, review, "jbo", skill_dir=self.skill_dir)
+        historic["language"] = "art-lojban"
+        self.assertEqual(localization.validate_bundle(historic, language="jbo")["messages"], messages)
+        self.assertEqual(historic["language"], "art-lojban")
+        output = self.temp_root / "old-alias-snapshot.json"
+        self._write_json(output, historic)
+        localization.snapshot("jbo", output, messages=messages, review=review, skill_dir=self.skill_dir)
+        self.assertEqual(json.loads(output.read_text(encoding="utf-8"))["language"], "jbo")
+        self._write_json(output, historic)
+        localization.snapshot("en", output, skill_dir=self.skill_dir, replace_language=True)
+        self.assertEqual(json.loads(output.read_text(encoding="utf-8"))["language"], "en")
 
     def test_validate_messages_requires_complete_keys_and_matching_safe_placeholders(self):
         sources = localization.read_sources(self.skill_dir)

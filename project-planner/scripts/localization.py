@@ -61,6 +61,37 @@ _PRIVATE_SINGLETON_RE = re.compile(r"^[Xx]$")
 _SUBTAG_RE = re.compile(r"^[A-Za-z0-9]{1,8}$")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _FIELD_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+# RFC 5646's fixed set of 26 grandfathered tags. Values are IANA
+# Preferred-Value entries, or the tag itself when no replacement exists.
+# Verified against the registry dated 2026-09-17; no runtime network lookup.
+_GRANDFATHERED_TAGS = {
+    "art-lojban": "jbo",
+    "cel-gaulish": "cel-gaulish",
+    "en-gb-oed": "en-GB-oxendict",
+    "i-ami": "ami",
+    "i-bnn": "bnn",
+    "i-default": "i-default",
+    "i-enochian": "i-enochian",
+    "i-hak": "hak",
+    "i-klingon": "tlh",
+    "i-lux": "lb",
+    "i-mingo": "i-mingo",
+    "i-navajo": "nv",
+    "i-pwn": "pwn",
+    "i-tao": "tao",
+    "i-tay": "tay",
+    "i-tsu": "tsu",
+    "no-bok": "nb",
+    "no-nyn": "nn",
+    "sgn-be-fr": "sfb",
+    "sgn-be-nl": "vgt",
+    "sgn-ch-de": "sgg",
+    "zh-guoyu": "cmn",
+    "zh-hakka": "hak",
+    "zh-min": "zh-min",
+    "zh-min-nan": "nan",
+    "zh-xiang": "hsn",
+}
 
 
 class LocalizationError(ValueError):
@@ -68,9 +99,12 @@ class LocalizationError(ValueError):
 
 
 def _canonicalize_bcp47(value: str) -> str:
-    """Canonicalize ordinary BCP 47 syntax without consulting an online registry."""
+    """Normalize BCP 47 syntax, casing, and the fixed grandfathered aliases."""
     if not value or value != value.strip() or not value.isascii():
         raise LocalizationError("language must be a non-empty ASCII BCP 47 tag")
+    grandfathered = _GRANDFATHERED_TAGS.get(value.lower())
+    if grandfathered is not None:
+        return grandfathered
 
     parts = value.split("-")
     if any(not part for part in parts):
@@ -147,7 +181,7 @@ def _canonicalize_bcp47(value: str) -> str:
 
 
 def normalize_language(language: str) -> str:
-    """Return canonical BCP 47 casing for a path-safe language tag."""
+    """Return a path-safe normalized tag, not full IANA registry validation."""
     if not isinstance(language, str):
         raise LocalizationError("language must be a string; null is not a plan language")
     if language.casefold() == "null":
@@ -674,7 +708,9 @@ def _check_existing_owner(
         existing_language = normalize_language(existing.get("language"))
     except LocalizationError as exc:
         raise LocalizationError(f"refusing to replace a locale target with unknown language ownership: {path}") from exc
-    if existing.get("language") != existing_language:
+    stored_language = existing["language"]
+    legacy_alias = _GRANDFATHERED_TAGS.get(stored_language.lower()) == existing_language
+    if stored_language != existing_language and not legacy_alias:
         raise LocalizationError(f"refusing to replace a locale target with noncanonical language ownership: {path}")
     if existing_language != language and not allow_language_change:
         raise LocalizationError(f"refusing to replace a locale target owned by another language: {path}")
