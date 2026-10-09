@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "language": "zh-CN",
   "title": "本地优先待办应用",
   "summary": "交付带持久化、筛选、JSON 导入和隐私说明的离线待办应用。",
   "unit": "相对工作单位",
@@ -75,5 +76,6 @@
       "estimate_basis": "零工作量决策点", "kind": "milestone", "external_ready": null,
       "pr_scope": "无独立 PR"
     }
-  ]
+  ],
+  "localization": {"snapshot": "locale-snapshot.json", "messages_sha256": "a6c2fc8abfad863323b05e0c2f2dce903ee4715242add339d8a646c5d710cf2f"}
 }

@@ -5,6 +5,8 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
+import xml.etree.ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,6 +41,7 @@ def task(task_id, duration=1, deps=None, resources=None, kind="task", ready=None
 def plan(tasks, max_parallel=None, requirements=None, **changes):
     value = {
         "version": 1,
+        "language": "zh-CN",
         "title": "测试计划",
         "summary": "验证排程",
         "unit": "相对工作单位",
@@ -171,12 +174,178 @@ class ValidationTests(unittest.TestCase):
         raw = plan([])
         raw.pop("unit")
         normalized = build_plan.validate_plan(raw)
-        self.assertEqual(normalized["unit"], build_plan.DEFAULT_UNIT)
+        self.assertEqual(normalized["unit"], "相对工作单位")
+
+    def test_omitted_language_defaults_to_english_and_null_is_invalid(self):
+        raw = plan([])
+        raw.pop("language")
+        raw.pop("unit")
+        normalized = build_plan.validate_plan(raw)
+        self.assertEqual(normalized["language"], "en")
+        self.assertEqual(normalized["unit"], "relative work units")
+        for value in (None, "", "fr", True, [], {}):
+            with self.subTest(value=value):
+                self.assert_invalid(plan([], language=value), "language")
+
+    def test_language_change_preserves_schedule_and_resource_identity(self):
+        raw = plan([task("E", 0, kind="external", ready=None), task("A", 2, resources=["共同资源"]),
+                    task("B", 1, resources=["共同资源"]), task("C", 1, deps=["E"])], max_parallel=2)
+        chinese = schedule(raw)
+        english = schedule({**raw, "language": "en", "title": "Translated title"})
+        self.assertEqual(chinese["tasks"], english["tasks"])
+        self.assertEqual(chinese["scheduling"], english["scheduling"])
+        self.assertEqual(english["tasks"][0]["status"], "blocked")
+
+    def test_explicit_unit_is_not_translated(self):
+        result = schedule(plan([], language="en", unit="custom relative units"))
+        self.assertEqual(result["unit"], "custom relative units")
 
 
 class ArtifactTests(unittest.TestCase):
+    def snapshot_bundle(self, language="ja", **message_changes):
+        """Synthetic review evidence tests transport/validation, not translation quality."""
+        loc = build_plan.localization
+        messages = {**build_plan.load_messages("en"), "plan_title": "プロジェクト計画",
+                    "unit": "相対作業量単位", **message_changes}
+        digest = loc.messages_hash(messages)
+        sources = {key: "0" * 64 for key in ("en", "zh-CN", "context")}
+        review = {"status": "PASS", "per_key": {key: {"status": "PASS", "evidence": "Synthetic transport fixture"}
+                  for key in loc.MESSAGE_KEYS}, "reviewer": {"identity": "synthetic-unit-test", "fork_turns": "none"},
+                  "hashes": {phase: {"source_hashes": sources, "messages_sha256": digest}
+                             for phase in ("before", "read", "after")}}
+        return {"generator": loc.GENERATOR, "version": 1, "language": language, "messages": messages,
+                "messages_sha256": digest, "source_hashes": sources, "semantic_review": review}
+
+    def snapshot_input(self, root, bundle):
+        (root / "locale-snapshot.json").write_text(json.dumps(bundle, ensure_ascii=False), encoding="utf-8")
+        raw = plan([task("E", 0, kind="external", ready=None), task("A", resources=["exact-resource"]),
+                    task("B", deps=["E"])], language=bundle["language"])
+        raw.pop("unit")
+        raw["localization"] = {"snapshot": "locale-snapshot.json", "messages_sha256": bundle["messages_sha256"]}
+        path = root / "plan-input.json"
+        path.write_text(json.dumps(raw, ensure_ascii=False), encoding="utf-8")
+        return path, raw
+
+    def test_reviewed_new_language_snapshot_and_historical_reproduction(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / "tests") as tmp:
+            root = Path(tmp)
+            input_path, raw = self.snapshot_input(root, self.snapshot_bundle())
+            with mock.patch.object(build_plan, "load_messages", side_effect=AssertionError("must use frozen snapshot")):
+                result = build_plan.run(input_path, root / "out")
+                first = {name: (root / "out" / name).read_bytes() for name in build_plan.OUTPUT_NAMES}
+                build_plan.run(input_path, root / "out")
+                self.assertEqual(first, {name: (root / "out" / name).read_bytes() for name in build_plan.OUTPUT_NAMES})
+            self.assertEqual(result["unit"], "相対作業量単位")
+            self.assertEqual(result["localization"], raw["localization"])
+            public = json.loads(first["schedule.json"])
+            self.assertNotIn("_locale_bundle", public)
+            self.assertIn("プロジェクト計画", first["plan.md"].decode())
+            self.assertIn('<html lang="ja">', first["gantt.html"].decode())
+            svg = ET.fromstring(first["gantt.svg"])
+            self.assertEqual(svg.attrib["{http://www.w3.org/XML/1998/namespace}lang"], "ja")
+            reference = schedule({key: value for key, value in {**raw, "language": "en"}.items() if key != "localization"})
+            self.assertEqual(result["tasks"], reference["tasks"])
+            self.assertEqual(result["scheduling"], reference["scheduling"])
+
+    def test_invalid_snapshot_fails_before_any_output(self):
+        for change in ("message", "review", "language", "binding", "traversal"):
+            with self.subTest(change=change), tempfile.TemporaryDirectory(dir=ROOT / "tests") as tmp:
+                root = Path(tmp)
+                bundle = self.snapshot_bundle()
+                if change == "message":
+                    bundle["messages"]["close"] = "changed after review"
+                elif change == "review":
+                    del bundle["semantic_review"]["per_key"]["close"]
+                elif change == "language":
+                    bundle["language"] = "fr"
+                input_path, raw = self.snapshot_input(root, bundle)
+                if change == "language":
+                    raw["language"] = "ja"
+                elif change == "binding":
+                    raw["localization"]["messages_sha256"] = "1" * 64
+                elif change == "traversal":
+                    raw["localization"]["snapshot"] = "../locale-snapshot.json"
+                input_path.write_text(json.dumps(raw), encoding="utf-8")
+                with self.assertRaisesRegex(build_plan.PlanError, "localization"):
+                    build_plan.run(input_path, root / "out")
+                self.assertFalse((root / "out").exists())
+
+    def test_fixed_message_markup_is_escaped_in_every_renderer(self):
+        text = '</script><img src=x onerror=alert(1)> | [unsafe]'
+        with tempfile.TemporaryDirectory(dir=ROOT / "tests") as tmp:
+            root = Path(tmp)
+            bundle = self.snapshot_bundle(plan_title=text, close=text, assumptions=text, legend_task=text)
+            input_path, _ = self.snapshot_input(root, bundle)
+            build_plan.run(input_path, root / "out")
+            for name in ("plan.md", "gantt.svg", "gantt.html"):
+                rendered = (root / "out" / name).read_text(encoding="utf-8")
+                self.assertNotIn("<img", rendered, name)
+                self.assertNotIn("</script><img", rendered, name)
+            self.assertIn("\\|", (root / "out" / "plan.md").read_text(encoding="utf-8"))
+
+    def test_both_languages_cover_all_artifacts_and_client_labels(self):
+        for language, expected in (("en", "Project plan"), ("zh-CN", "项目计划")):
+            with self.subTest(language=language), tempfile.TemporaryDirectory(dir=ROOT / 'tests') as tmp:
+                raw = plan([task("E", 0, kind="external", ready=None), task("M", 0, kind="milestone")], language=language)
+                raw.pop("unit")
+                input_path = Path(tmp) / "input.json"
+                input_path.write_text(json.dumps(raw), encoding="utf-8")
+                output = Path(tmp) / "out"
+                result = build_plan.run(input_path, output)
+                self.assertEqual(result["language"], language)
+                self.assertIn(expected, (output / "plan.md").read_text(encoding="utf-8"))
+                svg = ET.fromstring((output / "gantt.svg").read_text(encoding="utf-8"))
+                self.assertEqual(svg.attrib["{http://www.w3.org/XML/1998/namespace}lang"], language)
+                html_text = (output / "gantt.html").read_text(encoding="utf-8")
+                self.assertIn(f'<html lang="{language}">', html_text)
+                start = html_text.index('<script type="application/json" id="ui-data">') + len('<script type="application/json" id="ui-data">')
+                ui = json.loads(html_text[start:html_text.index('</script>', start)])
+                self.assertEqual(ui["blocked"], "Blocked" if language == "en" else "阻塞")
+                self.assertEqual(ui["kinds"]["milestone"], "Milestone" if language == "en" else "里程碑")
+                self.assertEqual(ui["labels"][0][0], "Status" if language == "en" else "状态")
+
+    def test_english_fixture_has_no_chinese_fixed_labels(self):
+        raw = {"version": 1, "language": "en", "title": "Export", "summary": "Export data", "assumptions": [],
+               "risks": [], "requirements": [], "max_parallel": None, "tasks": []}
+        result = schedule(raw)
+        for render in (build_plan.render_markdown, build_plan.render_svg, build_plan.render_html):
+            text = render(result)
+            self.assertFalse(any('\u4e00' <= char <= '\u9fff' for char in text), render.__name__)
+
+    def test_invalid_locale_fails_before_output_files_are_written(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / 'tests') as tmp:
+            root = Path(tmp)
+            locales = root / "locales"
+            locales.mkdir()
+            for path in build_plan.LOCALES_DIR.glob("*.json"):
+                (locales / path.name).write_bytes(path.read_bytes())
+            english_path = locales / "en.json"
+            messages = json.loads(english_path.read_text(encoding="utf-8"))
+            del messages["close"]
+            english_path.write_text(json.dumps(messages), encoding="utf-8")
+            input_path = root / "input.json"
+            input_path.write_text(json.dumps(plan([])), encoding="utf-8")
+            output = root / "out"
+            with mock.patch.object(build_plan, "LOCALES_DIR", locales):
+                with self.assertRaisesRegex(build_plan.PlanError, "message keys"):
+                    build_plan.run(input_path, output)
+            self.assertFalse(output.exists() and any(output.iterdir()))
+
+    def test_locale_placeholder_mismatch_is_rejected(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / 'tests') as tmp:
+            locales = Path(tmp)
+            for path in build_plan.LOCALES_DIR.glob("*.json"):
+                (locales / path.name).write_bytes(path.read_bytes())
+            english_path = locales / "en.json"
+            messages = json.loads(english_path.read_text(encoding="utf-8"))
+            messages["blocked_reason"] = "Blocked {wrong}"
+            english_path.write_text(json.dumps(messages), encoding="utf-8")
+            with mock.patch.object(build_plan, "LOCALES_DIR", locales):
+                with self.assertRaisesRegex(build_plan.PlanError, "placeholders differ"):
+                    build_plan.load_messages("en")
+
     def test_fixture_end_to_end_and_timeline_consistency(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'tests') as tmp:
             completed = subprocess.run(
                 [sys.executable, "-X", "utf8", str(SCRIPT), str(FIXTURE), "--output", tmp],
                 text=True, capture_output=True, encoding="utf-8", check=False,
@@ -221,7 +390,7 @@ class ArtifactTests(unittest.TestCase):
     def test_refuses_non_generated_target_and_input_collision(self):
         raw = plan([task("A")])
         result = schedule(raw)
-        with tempfile.TemporaryDirectory() as tmp:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'tests') as tmp:
             root = Path(tmp)
             input_path = root / "input.json"
             input_path.write_text(json.dumps(raw), encoding="utf-8")
@@ -238,7 +407,7 @@ class ArtifactTests(unittest.TestCase):
                 build_plan.write_outputs(colliding_input, collision, result)
 
     def test_cli_reports_invalid_json_without_traceback(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'tests') as tmp:
             root = Path(tmp)
             bad = root / "bad.json"
             bad.write_text("{ bad", encoding="utf-8")

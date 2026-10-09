@@ -1,178 +1,215 @@
-# 规划输入契约
+# Planning Input Schema
 
-本契约把普通任务的数字解释为粗略的相对工作量，并用同一抽象轴表达相对顺序。它不把工作量换算为小时、工作日或日历日期，也不预测现实工期。
+This contract models ordinary-task duration as rough relative workload and schedule coordinates on one abstract axis. It does not convert workload to hours or working days, use calendar dates, or predict elapsed project time. New skill-flow plans also pin the fixed display messages to a plan-local locale snapshot so the generated files and their review use the same verified language data.
 
-`plan-input.json` 使用 UTF-8 JSON。生成命令为：
+The input is UTF-8 JSON. Run the deterministic generator with:
 
 ```text
-python <skill-dir>/scripts/build_plan.py INPUT.json --output DIR
+python -X utf8 "<skill-dir>/scripts/build_plan.py" INPUT.json --output DIR
 ```
 
-成功时固定生成 `schedule.json`、`gantt.svg`、`gantt.html` 和 `plan.md`；输入校验失败时返回退出码 2，并把原因写入标准错误。四个产物由同一个排程对象生成。
+On success it writes `schedule.json`, `gantt.svg`, `gantt.html`, and `plan.md` from one schedule object. Invalid input returns exit code `2` and reports the reason to standard error. The generator reads the supplied plan input and, for snapshot-backed inputs, its explicitly named locale snapshot. It never reads mutable skill configuration or discovers a locale by constructing a path from a language string. The caller resolves skill configuration and verifies or prepares the locale before writing the input.
 
-除 `unit` 可省略外，所有顶层字段都必须出现；`assumptions`、`risks`、`requirements` 和 `tasks` 可以为空数组。规划真实项目时仍应提供足以覆盖需求的任务。
+## Top-level fields
 
-## 顶层字段
+Every required field must appear. `language`, `unit`, and `localization` are optional only for backward compatibility; new skill-flow plans write an explicit language and locale snapshot reference. `assumptions`, `risks`, `requirements`, and `tasks` may be empty arrays. A real project still needs enough tasks to cover its requirements.
 
-| 字段 | 类型 | 规则 |
+| Field | Type | Rules |
 | --- | --- | --- |
-| `version` | 整数 | 必须为 `1`。 |
-| `title` | 字符串 | 非空项目或功能名称。 |
-| `summary` | 字符串 | 需求范围和目标的简明摘要。 |
-| `unit` | 字符串 | 可省略；默认“相对工作单位”。仅是显示标签，不参与换算；规划文档使用相对工作量标签，不使用现实时间单位。 |
-| `assumptions` | 字符串数组 | 估算、容量、技术边界等假设。 |
-| `risks` | 字符串数组 | 已知风险和不确定性。 |
-| `requirements` | 对象数组 | 原始需求的可追溯条目。 |
-| `max_parallel` | 正整数或 `null` | 普通任务并发上限；`null` 表示容量未知，按无容量上限计算理论排程。 |
-| `tasks` | 对象数组 | 任务、里程碑和外部事件。 |
+| `version` | integer | Must be `1`. |
+| `language` | canonical language-tag string, optional for legacy input | Omission defaults to `en` for direct generator compatibility. Explicit `null`, an empty string, or a non-string is invalid. The skill workflow always writes the resolved canonical tag. A valid tag alone does not establish localization support: the selected language must resolve to a current verified bundle or a valid plan-local snapshot. |
+| `localization` | object, optional for legacy input | New skill-flow plans require `{ "snapshot": "locale-snapshot.json", "messages_sha256": "<canonical message hash>" }`. `snapshot` is a relative path resolved from the directory containing `plan-input.json`; `messages_sha256` must match the messages in that snapshot. The generator verifies both the snapshot language and message hash before rendering. |
+| `title` | string | Non-empty project or feature name. |
+| `summary` | string | Concise description of scope and goal. |
+| `unit` | string, optional | Display label only; omitted values default to the equivalent of “relative work units” in the selected language. The generator preserves a supplied label. It does not convert values. Keep authored explanatory text consistent with the output language and relative-work semantics. |
+| `assumptions` | array of strings | Estimation, capacity, technical-boundary, and other planning assumptions. |
+| `risks` | array of strings | Known risks and uncertainties. |
+| `requirements` | array of objects | Traceable requirement items. |
+| `max_parallel` | positive integer or `null` | Capacity limit for ordinary scheduled tasks. `null` means capacity is unknown and the schedule shows theoretical parallelism without a capacity limit. This is a plan value, not an agent-concurrency setting. |
+| `tasks` | array of objects | Ordinary tasks, milestones, and external events. |
 
-每条需求必须包含唯一非空 `id`、原文或忠实改写的 `text`，以及可定位的 `source`。`requirements` 非空时，每条需求至少被一个任务的 `requirement_ids` 引用。
+The `requirements` array may be empty. Otherwise each entry needs a unique, non-empty `id`, `text` containing the original requirement or a faithful target-language paraphrase, and a locatable `source`. Every requirement must be referenced by at least one task's `requirement_ids`. Preserve the original source document verbatim as required by the skill workflow.
 
-## 任务字段
+## Task fields
 
-每项任务都包含以下字段：
+Every task object contains all of these fields:
 
-| 字段 | 类型 | 规则 |
+| Field | Type | Rules |
 | --- | --- | --- |
-| `id` | 字符串 | 唯一且非空。 |
-| `title` | 字符串 | 简短可辨识。 |
-| `description` | 字符串 | 范围、目标和边界。 |
-| `requirement_ids` | 字符串数组 | 只引用已定义的需求 ID。 |
-| `duration` | 数字 | 粗略相对工作量；有限数；普通任务必须大于 0，里程碑和外部事件必须为 0。以简单参照任务的 1 为基准，2、3 等只表示约两倍、三倍工作量。 |
-| `depends_on` | 字符串数组 | 只引用已定义的任务 ID；整个图必须无环。 |
-| `resources` | 字符串数组 | 精确字符串资源锁；同名锁使普通任务互斥。 |
-| `deliverable` | 字符串 | 可检查的交付物。 |
-| `acceptance` | 字符串数组 | 完成与可合并的验收条件。 |
-| `estimate_basis` | 字符串 | 估算依据及相关假设。 |
-| `kind` | 字符串 | `task`、`milestone` 或 `external`。 |
-| `external_ready` | 数字或 `null` | 仅外部事件可使用同一抽象轴上的非负有限相对偏移；未知为 `null`，已就绪可用 `0`。它是显式情景假设，不换算外部日历等待；其他类型必须为 `null`。 |
-| `pr_scope` | 字符串 | 普通任务的独立 PR 边界；里程碑或外部事件说明其无代码 PR。 |
+| `id` | string | Unique and non-empty. |
+| `title` | string | Short, recognizable title. |
+| `description` | string | Scope, goal, and boundaries. |
+| `requirement_ids` | array of strings | References only defined requirement IDs. |
+| `duration` | number | Finite relative workload. An ordinary `task` must be greater than zero. A `milestone` or `external` event must be zero. Use a simple ordinary reference task as `1`; values such as `2` and `3` express roughly two or three times the workload. |
+| `depends_on` | array of strings | References only defined task IDs. The full graph must be acyclic. It expresses delivery dependencies only. |
+| `resources` | array of strings | Exact-match locks for shared exclusive resources. Reusing a name makes ordinary tasks mutually exclusive. |
+| `deliverable` | string | Inspectable result. |
+| `acceptance` | array of strings | Conditions for completion and merge readiness. |
+| `estimate_basis` | string | Reasoning and assumptions behind the relative-work estimate. Include implementation, tests, documentation, and expected review feedback. |
+| `kind` | string | One of the fixed protocol values: `task`, `milestone`, or `external`. |
+| `external_ready` | non-negative finite number or `null` | For `external` events only, gives an explicit relative readiness position on the same abstract axis. `null` means unknown and blocks that event and all descendants; `0` may represent an already-ready event. It never represents outside calendar waiting. Every non-external node must set this to `null`. |
+| `pr_scope` | string | One independent PR boundary for an ordinary task. For a milestone or external event, explain that it has no code PR. |
 
-依赖在前置节点结束时释放。普通任务占用一个并发槽，并在运行期间独占其 `resources`；里程碑和外部事件不占并发槽或资源。`external_ready: null` 会阻塞该节点及所有后代，排程不会为它们虚构相对起点或终点。
+`requirement_ids`, `depends_on`, and `resources` cannot contain duplicates. IDs and resource names in them must be non-empty strings. `acceptance`, `resources`, and `requirement_ids` may be empty arrays. The generator allows some descriptive strings to be empty, but a usable plan should provide enough detail for implementation and acceptance.
 
-`requirement_ids`、`depends_on` 和 `resources` 各自不得包含重复项，且其中的 ID 或资源名必须是非空字符串。`acceptance`、`resources`、`requirement_ids` 可以为空数组；生成器允许部分说明文字为空，但规划者应填写足以让人实施和验收的内容。
+## Scheduling and relative-work semantics
 
-算法按输入任务顺序作为稳定优先级执行确定性拓扑列表排程。相同输入得到相同结果，但这不是全局最优调度器。`depends_on` 表达交付先后，`resources` 表达资源互斥，两者不能混用。
+A dependency is released only after its prerequisite is implemented, accepted, merged, and its interface or data contract is available. A submitted PR alone does not release a dependent task. Record contract design, review, and revision effort in a positive-work ordinary task; a zero-work milestone may then record that the contract is frozen. Mock-based tasks can depend on that milestone, while final integration still depends on the real implementations.
 
-## 输出约定
+Use `depends_on` for delivery order and `resources` for resource conflicts. Never create a dependency edge merely because two tasks share a person, environment, directory, or other locked resource. Ordinary tasks consume one parallel slot and exclusively hold their listed resources while scheduled. Milestones and external events consume neither.
 
-`schedule.json` 完整回显输入信息，并为每个节点给出 `input_index`、`status`、`start`、`finish` 和 `blocked_by`，同时记录生成器与排程元数据。`start`、`finish` 和 `T+N` 都是相对坐标，不是现实日期或工期。`plan.md`、`gantt.svg` 和 `gantt.html` 使用同一份排程数据；HTML 离线自包含，嵌入 SVG，并提供任务详情交互。图中的普通任务条长表示 `duration` 工作量；阻塞任务的整行条纹只表示状态，不表示工作量。
+Unknown external readiness blocks that event and every descendant; the scheduler must not invent start or finish coordinates for the blocked branch. Unrelated branches may still be scheduled. A known `external_ready` is an explicit planning scenario, not a conversion to a calendar wait.
 
-生成器只替换带自身标记的既有目标文件：`schedule.json` 依靠 `generator` 字段识别，其他格式依靠生成注释识别。任一同名目标属于其他来源时，整次写入会被拒绝，目录内其他文件保持不变。输入文件不能与任一目标文件是同一路径。
+The scheduler uses input order as a stable priority for deterministic topological list scheduling. Identical inputs produce identical results; the algorithm is not a global optimizer. `duration` and bar length express approximate relative workload. `unit` is a label. `start`, `finish`, and labels such as `T+2` express only positions on the abstract axis. None of these values means hours, working days, calendar dates, or actual elapsed time.
 
-## 小型完整示例
+## Output and file protection
+
+`schedule.json` echoes the normalized input, including the resolved `language` and `localization` object, and adds each node's `input_index`, `status`, `start`, `finish`, and `blocked_by`, plus generator and schedule metadata. It does not embed the full messages or semantic review. Protocol keys, node kinds, and status values stay fixed regardless of language. The Markdown, SVG, and HTML display text uses the messages in the selected snapshot; SVG and HTML language attributes match it. The standalone artifacts must explain that bar length is relative workload and the axis is not real time.
+
+`locale-snapshot.json` is a separate plan artifact written by the localization helper. It preserves the complete selected messages, source fingerprints, message hash, and verification evidence used to generate and review the plan. New skill-flow plans keep this file beside the four generator outputs. It does not change scheduling semantics or the names of the four primary outputs.
+
+For backward compatibility, an older English or Simplified Chinese input without `localization` may use the corresponding built-in messages and current valid bilingual baseline review. A new skill-flow plan always writes a snapshot, including for `en` and `zh-CN`. A language without an available verified bundle requires a valid snapshot; language selection never silently falls back to English. An explicit `null` language remains invalid even though `language: null` is a valid unset state in the skill-wide configuration.
+
+A new skill-flow input includes this additional field, with the actual hash returned by the localization helper:
+
+```json
+{
+  "language": "en",
+  "localization": {
+    "snapshot": "locale-snapshot.json",
+    "messages_sha256": "<actual canonical message hash>"
+  }
+}
+```
+
+The HTML is self-contained and offline-capable, embeds the SVG, and provides task-detail interaction. A blocked row's full-row pattern conveys status, not task workload.
+
+The generator replaces only targets bearing its own marker: `schedule.json` is identified by its `generator` field, and other formats by their generation comments. It rejects the entire write if any same-named target belongs to another source, leaving the directory's other files intact. The input file cannot resolve to the same path as any output target.
+
+## Complete legacy-compatible example
+
+This direct-generator example omits the optional locale snapshot to illustrate backward compatibility. The skill workflow always includes the `localization` field and a matching `locale-snapshot.json`.
 
 ```json
 {
   "version": 1,
-  "title": "资料导出",
-  "summary": "为用户提供异步 CSV 导出，并显示下载入口。",
-  "unit": "相对工作单位",
+  "language": "en",
+  "title": "Data export",
+  "summary": "Provide asynchronous CSV exports and a download entry point.",
+  "unit": "relative work units",
   "assumptions": [
-    "团队容量未知，排程展示无容量上限的理论并行",
-    "接口契约冻结后，前后端可用 mock 并行开发"
+    "Team capacity is unknown, so the schedule shows theoretical parallelism without a capacity limit.",
+    "Frontend and backend work can use mocks after the contract is frozen."
   ],
   "risks": [
-    "对象存储凭据的相对就绪偏移尚未确定"
+    "The relative readiness position for object-storage credentials is unknown."
   ],
   "requirements": [
-    {"id": "R1", "text": "用户可以请求 CSV 导出", "source": "需求文档/导出"},
-    {"id": "R2", "text": "用户可以下载已完成的文件", "source": "需求文档/下载"}
+    {
+      "id": "R1",
+      "text": "Users can request CSV exports.",
+      "source": "Requirements document / Export"
+    },
+    {
+      "id": "R2",
+      "text": "Users can download completed files.",
+      "source": "Requirements document / Download"
+    }
   ],
   "max_parallel": null,
   "tasks": [
     {
       "id": "T0",
-      "title": "设计并评审导出接口契约",
-      "description": "完成请求、状态与下载响应设计，并处理评审意见。",
+      "title": "Design and review the export API contract",
+      "description": "Define request, status, and download responses and resolve review feedback.",
       "requirement_ids": ["R1", "R2"],
       "duration": 1,
       "depends_on": [],
-      "resources": ["导出接口设计"],
-      "deliverable": "评审通过的接口契约文档",
-      "acceptance": ["字段、状态码和错误模型已确认"],
-      "estimate_basis": "以简单契约任务为 1 个相对工作单位，包含设计、评审和修订",
+      "resources": ["export API design"],
+      "deliverable": "Reviewed API contract",
+      "acceptance": ["Fields, status codes, and error model are agreed."],
+      "estimate_basis": "Reference workload of 1; includes design, review, and revision.",
       "kind": "task",
       "external_ready": null,
-      "pr_scope": "一个文档 PR：接口契约、示例与兼容性说明"
+      "pr_scope": "One documentation PR for the API contract, examples, and compatibility notes."
     },
     {
       "id": "M1",
-      "title": "冻结导出接口契约",
-      "description": "标记已评审的契约可以供实现与 mock 使用。",
+      "title": "Freeze the export API contract",
+      "description": "Record that the reviewed contract is ready for implementation and mock use.",
       "requirement_ids": ["R1", "R2"],
       "duration": 0,
       "depends_on": ["T0"],
       "resources": [],
-      "deliverable": "已批准的接口契约",
-      "acceptance": ["T0 的契约已合并并标记为冻结"],
-      "estimate_basis": "工作量已计入 T0；此节点只是零工作量状态门槛",
+      "deliverable": "Approved, frozen API contract",
+      "acceptance": ["T0 is merged and the contract is marked frozen."],
+      "estimate_basis": "Effort is included in T0; this is a zero-work state gate.",
       "kind": "milestone",
       "external_ready": null,
-      "pr_scope": "无代码 PR；记录契约批准状态"
+      "pr_scope": "No code PR; records contract approval."
     },
     {
       "id": "E1",
-      "title": "对象存储凭据可用",
-      "description": "等待平台团队交付测试环境凭据。",
+      "title": "Object-storage credentials become available",
+      "description": "Wait for the platform team to provide test-environment credentials.",
       "requirement_ids": ["R2"],
       "duration": 0,
       "depends_on": [],
       "resources": [],
-      "deliverable": "可验证的测试凭据",
-      "acceptance": ["测试环境上传和下载探测成功"],
-      "estimate_basis": "外部相对就绪偏移未知",
+      "deliverable": "Test credentials that can be verified",
+      "acceptance": ["Upload and download probes succeed in the test environment."],
+      "estimate_basis": "Relative readiness position is unknown.",
       "kind": "external",
       "external_ready": null,
-      "pr_scope": "无代码 PR；外部交付门槛"
+      "pr_scope": "No code PR; this is an external delivery gate."
     },
     {
       "id": "T1",
-      "title": "实现导出 API",
-      "description": "按冻结契约实现异步导出和状态查询。",
+      "title": "Implement the export API",
+      "description": "Implement asynchronous export and status lookup against the frozen contract.",
       "requirement_ids": ["R1", "R2"],
       "duration": 3,
       "depends_on": ["M1", "E1"],
-      "resources": ["后端导出模块"],
-      "deliverable": "通过集成测试的导出 API",
-      "acceptance": ["请求可创建任务", "完成后返回可下载地址"],
-      "estimate_basis": "相对工作量约为参照任务的 3 倍，包含实现、测试和审查修订",
+      "resources": ["backend export module"],
+      "deliverable": "Export API with integration tests",
+      "acceptance": ["Requests create export jobs.", "Completed jobs return a download URL."],
+      "estimate_basis": "About 3 times the reference task; includes implementation, tests, and review revisions.",
       "kind": "task",
       "external_ready": null,
-      "pr_scope": "一个后端 PR：导出服务、路由与集成测试"
+      "pr_scope": "One backend PR for the export service, route, and integration tests."
     },
     {
       "id": "T2",
-      "title": "实现导出界面",
-      "description": "基于冻结契约和 mock 实现触发、状态与下载界面。",
+      "title": "Implement the export interface",
+      "description": "Build export, status, and download views against the frozen contract and a mock.",
       "requirement_ids": ["R1", "R2"],
       "duration": 2,
       "depends_on": ["M1"],
-      "resources": ["导出页面"],
-      "deliverable": "通过组件测试的导出界面",
-      "acceptance": ["可触发导出", "完成后显示下载入口"],
-      "estimate_basis": "相对工作量约为参照任务的 2 倍，包含界面、测试和审查修订",
+      "resources": ["export page"],
+      "deliverable": "Export interface with component tests",
+      "acceptance": ["Users can start an export.", "A download entry appears when it completes."],
+      "estimate_basis": "About 2 times the reference task; includes UI work, tests, and review revisions.",
       "kind": "task",
       "external_ready": null,
-      "pr_scope": "一个前端 PR：导出页面、API 适配器与组件测试"
+      "pr_scope": "One frontend PR for the export page, API adapter, and component tests."
     },
     {
       "id": "T3",
-      "title": "完成导出端到端集成",
-      "description": "用真实后端替换 mock，并验证完整导出流程。",
+      "title": "Integrate and test the complete export flow",
+      "description": "Replace the mock with the real backend and verify the full export path.",
       "requirement_ids": ["R1", "R2"],
       "duration": 1,
       "depends_on": ["T1", "T2"],
-      "resources": ["导出测试环境"],
-      "deliverable": "通过端到端测试的导出流程",
-      "acceptance": ["真实环境可从请求导出走到下载完成"],
-      "estimate_basis": "相对工作量约为参照任务的 1 倍，包含接线、端到端测试和审查修订",
+      "resources": ["export test environment"],
+      "deliverable": "End-to-end tested export flow",
+      "acceptance": ["A real request completes and the resulting file can be downloaded."],
+      "estimate_basis": "About 1 times the reference task; includes wiring, end-to-end tests, and review revisions.",
       "kind": "task",
       "external_ready": null,
-      "pr_scope": "一个集成 PR：真实 API 接线与端到端测试"
+      "pr_scope": "One integration PR for real API wiring and end-to-end tests."
     }
   ]
 }
 ```
 
-此示例中，有工作量的契约工作由 `T0` 估算，`M1` 只表达冻结瞬间。`T2` 可在契约冻结后基于 mock 开始；`T1` 仍受未知外部事件阻塞，`T3` 等待两端真实实现完成。资源锁没有被伪装成依赖边；所有 `T+N` 只表示相对顺序位置。
+In this example, T0 contains the contract effort and M1 is only the approval gate. T2 can proceed with a mock after M1. T1 remains blocked by unknown external readiness, so T3 also waits for both real implementations. Resource locks are not represented as dependency edges, and all relative positions refer only to the abstract axis.

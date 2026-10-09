@@ -1,70 +1,83 @@
-# 独立规划审查协议
+# Independent Plan Review Protocol
 
-生成计划后必须调用一个全新、无父对话上下文的 `gpt-5.6-sol`、`high` 推理子代理。审查者只读：它不得修改原始需求、输入 JSON 或任何生成产物。主代理负责记录结论、修订输入和重新生成。
+Every generated plan requires a full independent review. Each round uses a new subagent with no parent conversation context. The reviewer is read-only. The primary agent verifies the findings against the requirements and actual files, revises confirmed issues, regenerates the artifacts, and obtains a full review of the same scope.
 
-## 可复用提示词
+## Reusable review prompt
 
-主代理先计算原始需求、`plan-input.json`、`schedule.json`、`plan.md`、`gantt.svg` 和 `gantt.html` 的 SHA-256。把尖括号占位符替换为绝对路径和这份审查前哈希快照后，原样作为子代理任务发送：
+Before each review, the primary agent computes SHA-256 for the original requirements, `plan-input.json`, `schedule.json`, `plan.md`, `gantt.svg`, `gantt.html`, and `locale-snapshot.json`. Replace every placeholder below with its actual value and send the completed prompt verbatim.
 
 ```text
-你是 project-planner 的独立验收审查者。只读检查下列文件，不得编辑、创建或删除任何文件：
+You are the independent acceptance reviewer for project-planner. Read the files below without editing, creating, or deleting files.
 
-- 原始需求：<SOURCE_REQUIREMENTS_PATH>
-- 规划输入：<OUTPUT_DIR>/plan-input.json
-- 排程 JSON：<OUTPUT_DIR>/schedule.json
-- 中文规划：<OUTPUT_DIR>/plan.md
-- SVG 甘特图：<OUTPUT_DIR>/gantt.svg
-- HTML 甘特图：<OUTPUT_DIR>/gantt.html
+- Original requirements: <SOURCE_REQUIREMENTS_PATH>
+- Planning input: <OUTPUT_DIR>/plan-input.json
+- Schedule JSON: <OUTPUT_DIR>/schedule.json
+- Project plan: <OUTPUT_DIR>/plan.md
+- SVG Gantt chart: <OUTPUT_DIR>/gantt.svg
+- HTML Gantt chart: <OUTPUT_DIR>/gantt.html
+- Fixed-message locale snapshot: <OUTPUT_DIR>/locale-snapshot.json
 
-主代理在审查开始前记录的 SHA-256：
+Resolved output language: <OUTPUT_LANGUAGE>
+Language selection reason: <LANGUAGE_SELECTION_REASON>
+Maximum full revision-and-review cycles after this initial review: <MAX_REVIEW_REVISIONS>
+The revision cap does not reduce the scope of this initial review.
+
+Pre-review SHA-256 snapshot for all seven listed files:
 <PRE_REVIEW_SHA256_TABLE>
 
-先完整阅读原始需求，再逐项核查：
-1. 需求是否全部、准确地映射到 requirement 和任务，是否出现无依据的范围扩张。
-2. 每个普通任务是否构成可独立提交、测试、审查和合并的单个 PR；交付物、验收条件、估算依据与 pr_scope 是否具体。
-3. DAG 是否表达真实交付门槛；下游必须等前置开发完成、验收通过、PR 合并且契约可用。契约冻结与 mock 并行是否有明确里程碑和最终集成门槛。
-4. 资源互斥是否只由 resources 表达，未被伪装成 depends_on；max_parallel 为 null 时是否明确称为容量未知的理论并行。
-5. 外部未知事件及后代是否保持阻塞，是否避免虚构现实日期；已知相对偏移、普通任务工作量和零工作量节点是否合法。
-6. plan-input.json、schedule.json 与 plan.md 的任务、依赖、阻塞状态、相对起止和关键假设是否一致。
-7. 明确核查语义：普通任务 `duration` 和条长表示粗略相对工作量；先以简单任务 1 为参照，其他数字只表达约 2 倍、3 倍等比例。`unit` 只是标签，`start`、`finish`、`T+N` 只表示抽象轴上的相对顺序，不对应小时、工作日或日历日期；`external_ready` 只是同一抽象轴上的显式假设，不能换算外部日历等待，`null` 必须阻塞，`0` 可表示已就绪。
-8. 必须使用可用的图像查看或浏览器渲染工具，实际查看渲染后的甘特图。检查文字是否可读、任务/工作量条是否错位或裁切、阻塞状态和图例是否清晰、视觉结果是否与计划一致。确认图例或说明能看出条长是工作量、横轴不是现实时间，且没有把“工期”“计划完成”“进度”当作现实日程标签。只读 SVG/XML/HTML 源码不算视觉检查。若无法完成实际视觉检查，结论必须为 INCOMPLETE。
-9. 对你实际读取的上述每个文件计算 SHA-256，并与主代理给出的审查前快照比较。任何缺失或不一致都必须报告，结论不得为 PASS。
+Read the original requirements in full, then check all of the following:
 
-按以下 Markdown 结构返回，不要写入文件：
+1. Requirements map accurately and completely to requirement entries and tasks. No unsupported scope has been added.
+2. Each ordinary task is one independently deliverable, testable, reviewable, and mergeable PR. Its deliverable, acceptance conditions, estimate basis, and PR scope are concrete.
+3. The dependency graph represents genuine delivery gates. A prerequisite must be implemented, accepted, merged, and have its interface or data contract available before dependent work starts. Contract design, review, and revision effort has positive workload; a zero-work milestone only records approval. Mock-based work may proceed after contract freeze, while final integration waits for real implementations.
+4. Resource conflicts are represented by exact-match resource locks, not dependency edges. A null max_parallel is described as theoretical parallelism with unknown capacity and no capacity limit.
+5. Unknown external readiness blocks the event and every descendant. No calendar date or outside waiting duration is invented. Known relative readiness, ordinary-task workload, and zero-work node values are valid.
+6. plan-input.json, schedule.json, plan.md, and locale-snapshot.json agree on language, task details, dependencies, blocked status, relative positions, and key assumptions. The input and schedule reference the snapshot with its actual message hash. IDs, JSON keys, resource names, node kinds, and schedule status values remain unchanged.
+7. Check the workload semantics: ordinary-task duration and bar length mean rough relative workload, with one simple task as 1 and other values expressing approximate ratios such as 2 or 3. The unit is a label only. start, finish, and T+N are positions on an abstract axis, not hours, working days, or calendar dates. external_ready is an explicit position on that same axis, never outside calendar waiting; null blocks and 0 can mean ready.
+8. Confirm authored plan text and fixed display copy use the resolved output language. Preserve original quotations, identifiers, and names when appropriate. Verify the HTML lang and SVG language attributes. Check that localization does not alter requirement meaning, effort semantics, dependency gates, resource locks, or blocked status. Confirm the locale snapshot contains the messages used by the output and that its recorded source and message fingerprints agree with the semantic-review evidence stored in the snapshot.
+9. Use an image-viewing or browser-rendering tool to inspect an actually rendered Gantt chart and the HTML task details. Check readable text; alignment or clipping of bars, labels, legend, details, and long descriptions; clear blocked status; and agreement with the plan. The chart or its explanation must state that bar length means workload and the horizontal axis is not real time. Do not describe it as a real schedule or progress calendar. Source-only inspection is not a visual check. If you cannot complete this inspection, return INCOMPLETE.
+10. Compute SHA-256 for every file you actually read from the list above and compare it with the pre-review snapshot. Report every missing file or mismatch. A missing or mismatched hash rules out PASS.
 
-# 审查结果
-- 结论：PASS | REVISE | INCOMPLETE
-- 视觉检查：完成 | 未完成
-- 视觉检查方式：<工具与实际查看对象，或无法完成的原因>
+Return the review in <OUTPUT_LANGUAGE>, translating headings and narrative as needed while preserving fixed protocol values. Do not write the review to a file. Use this structure:
 
-## 所读文件哈希
-- <每个文件的绝对路径、SHA-256，以及与审查前快照是否一致>
+# <localized review-result heading>
+- <localized decision label>: PASS | REVISE | INCOMPLETE
+- <localized visual-check label>: complete | incomplete
+- <localized visual-method label>: <tool and rendered object, or reason it could not be completed>
 
-## 证据
-- <逐项列出已核查证据，引用文件路径、任务/需求 ID 或可定位章节>
+## <localized files-and-hashes heading>
+- <absolute path, SHA-256, and whether it matches the pre-review snapshot for each file>
 
-## 问题
-每项使用：
-- 严重度：实质 | 次要
-- 位置：<文件与 ID/章节>
-- 证据：<观察到的事实>
-- 影响：<为何影响正确性、可执行性或可读性>
-- 建议修复：<最小且具体的修复>
+## <localized evidence heading>
+- <evidence for each check, with file path, task/requirement ID, or locatable section>
 
-若无问题，写“无”。不要仅凭 JSON 能解析或字段齐全就给 PASS；PASS 要求所有必需核查完成且没有实质问题。
+## <localized issues heading>
+For each issue:
+- <localized severity label>: material | minor
+- <localized location label>: <file and ID/section>
+- <localized evidence label>: <observed fact>
+- <localized impact label>: <effect on correctness, feasibility, or readability>
+- <localized recommendation label>: <smallest specific repair>
+
+If there are no issues, say so in the resolved output language. Do not return PASS merely because JSON parses or fields exist. PASS requires every required check to be complete and no material issue to remain.
 ```
 
-## 主代理裁决与记录
+## Primary agent adjudication and record
 
-主代理不能把审查意见直接当作事实。逐项回到原始需求和产物验证，并在 `<output-dir>/review.md` 中记录“采纳”“部分采纳”或“驳回”，附证据和已采取的修复。
+The primary agent independently verifies every finding against both the requirements and the actual source or plan files; do not accept a reviewer's description as fact without checking it. Record each finding in `review.md` as accepted, partly accepted, or rejected, with specific evidence and any repair. Every finding whose evidence is confirmed must be corrected before a plan can pass. Write the review record's narrative in the resolved output language and preserve the protocol decisions `PASS`, `REVISE`, and `INCOMPLETE`.
 
-`review.md` 至少包含：
+For every review round, record:
 
-- 状态：`已通过审查` 或 `待决草稿`。
-- 原始需求的绝对路径，以及审查前、审查者所读、审查后三份 SHA-256。
-- 每轮使用的模型、推理强度、`fork_turns`、审查结论及视觉检查方式。
-- 每个问题的证据、主代理裁决和对应修复。
-- 最终 `plan-input.json`、`schedule.json`、`gantt.svg`、`gantt.html`、`plan.md` 的相对路径、字节数，以及审查前、审查者所读、审查后三份 SHA-256。
-- 最终产物摘要、剩余问题与未完成检查。
+- The original requirements' absolute path, resolved language, language-selection reason, and fixed `max_review_revisions` value.
+- Reviewer model, reasoning effort, `fork_turns`, decision, and visual-inspection method.
+- The pre-review snapshot, reviewer-reported hashes for files actually read, and post-review snapshot.
+- Each finding, evidence checked against the actual files, primary decision, and repair or reason for rejection.
+- For the final input, four generated outputs, and locale snapshot: relative path, byte size, and pre-review, reviewer-read, and post-review SHA-256 values.
+- Plan summary, remaining issues, and incomplete checks.
+- An explicit final status indicating `passed review` or `draft`, localized to the output language.
 
-审查返回后立刻重新计算全部哈希；三份哈希必须逐文件相同。任何待审文件在审查期间或之后发生变化，就必须生成新的快照并重新执行完整审查。初次审查后默认最多两轮修订；每次修订都重新生成四个产物，并启动新的独立审查子代理。两轮后仍有实质问题，或视觉检查、指定模型调用等必需步骤无法完成时，状态保持“待决草稿”。
+Hash checks cover the original requirements plus `plan-input.json`, `schedule.json`, `plan.md`, `gantt.svg`, `gantt.html`, and `locale-snapshot.json`. The locale snapshot contains the complete fixed messages and their verification evidence. The resolved language and snapshot message hash appear in the plan input and schedule. The reviewer must inspect the snapshot and must not read mutable global skill configuration.
+
+After each review, immediately recompute all seven hashes. The pre-review snapshot, reviewer-read hashes, and post-review values must match file by file. If any file is missing or changed, do not pass the review; create a fresh snapshot and repeat the complete review. A changed plan is never covered by a review of only the changed portion.
+
+The initial independent review is mandatory, even when `max_review_revisions` is `0`. That value caps only the number of full revision-and-review cycles after the initial round. Freeze it before the initial review; later changes to global configuration do not alter the current plan's cap. Each cycle corrects the source of an issue: update the input for planning issues, or complete the full localization correction workflow for fixed-message issues. Revalidate and semantically review changed messages, update the snapshot and its input hash, regenerate all four outputs, and start a new independent full plan review with a unique task name. A zero cap does not disable visual or hash checks. If any confirmed issue remains with no full review cycle available, retain draft status and list it. If any required check or designated model call is unavailable, use `INCOMPLETE` and retain draft status. Never claim the plan passed while a confirmed material issue, required incomplete check, or hash mismatch remains.

@@ -1,68 +1,106 @@
 ---
 name: project-planner
-description: 将需求文档拆成可独立提交 PR 的任务，并生成以粗略相对工作量和相对顺序表达的甘特图与中文项目规划文档。仅在用户显式调用 $project-planner 时使用。
+description: Turn requirements into reviewable project plans with relative schedules and Gantt charts.
 ---
 
-# 项目规划
+# Project Planner
 
-把需求转成一组有来源、可验收、可独立审查的 PR 任务，再用确定性引擎生成同源的相对工作量排程、甘特图和中文规划文档。条长只表达粗略工作量，横轴只表达相对顺序；它们不预测现实工期或日历日期。规划与审查都限于本地产物；不创建 Issue 或 PR，不开始实现业务代码。
+Turn requirements into traceable, independently reviewable PR-sized tasks, a deterministic relative schedule, Gantt charts, and a project plan. This skill creates local planning artifacts. It does not create GitHub Issues or PRs and does not implement project code.
 
-## 1. 确定输入与输出
+For a configuration-only request, such as “set $project-planner's default language to Japanese,” normalize the requested language and save only the explicitly requested setting with the configuration helper. Use `set --language ja --confirmed` for Japanese or `set --language null --confirmed` to return to conversation-based selection. Report success or the actual save failure and the installation-wide scope, then finish without asking for requirements, translating a catalog, or regenerating plans. Follow the planning workflow below only when plan creation or revision is also requested.
 
-读取用户指定的完整需求文档。若需求仅出现在对话中，先将原文逐字保存为输出目录中的 `source-requirements.md`，供后续独立审查。
+## 1. Resolve settings and output language
 
-输出目录优先使用用户指定的位置；否则使用用户项目的 `docs/plans/<slug>`。`<slug>` 取项目或功能名称的简短小写连字符形式。更新已有计划前，先读取目录内现有内容，仅更新本技能管理的文件，并保留其他文件。
-
-只在核心需求缺失或重大业务规则互相冲突、且不同选择会显著改变计划时提问。普通实现细节、估算精度和命名差异自行作出保守假设，并显式写入 `assumptions`。不要求具体开工日期；未指定单位时使用“相对工作单位”。`unit` 只是显示标签，不参与换算；计划使用粗略相对工作量，文档和示例不使用小时、工作日等现实时间单位。
-
-## 2. 建模
-
-完整阅读 [references/schema.md](references/schema.md)，按其契约在输出目录写入 `plan-input.json`。每项需求都必须有稳定 ID，并至少由一个任务覆盖。
-
-任务边界以一个可独立提交、测试和审查的 PR 为准。每个普通任务都写清交付物、验收条件、估算依据和 `pr_scope`；过大就继续拆分，无法独立验收就与真正不可分的工作合并。估算应包括实现、测试、文档和处理审查反馈的合理成本，并在 `estimate_basis` 中说明依据与假设。先选一个简单普通任务作为相对参照并记为 1；其余任务用粗略比例填写，例如 2 约为参照任务的两倍工作量、3 约为三倍。只表达相对大小，不把数字换算成小时或工作日，也不要求预测现实工期。
-
-依赖表示前置工作已经开发完成、通过验收、PR 已合并，并且其接口或数据契约可供下游使用。仅提交 PR 不解除依赖。契约先冻结时，先用有正工作量的普通任务估算设计、评审和修订工作，再让零工作量冻结里程碑依赖该任务；不得用里程碑隐藏有成本的工作。依赖冻结里程碑的任务可以基于 mock 并行，最终集成任务仍依赖真实实现完成。
-
-`depends_on` 只表达交付关系。把共享人员、环境、目录或其他互斥能力写入 `resources`，不要为了资源冲突伪造 DAG 边。资源名称是精确匹配的锁；同名资源使普通任务串行。团队容量已知时填写 `max_parallel`，未知时填 `null`，并在假设中明确该结果是无容量上限的理论并行排程。
-
-外部事件用 `kind: "external"`：已知最早可用的相对轴偏移写入 `external_ready`，未知则写 `null`；这个数字只是同一抽象轴上的显式情景假设，不换算外部日历等待，`0` 表示已就绪。未知外部事件及其后代必须保持阻塞，不猜测现实日期；无关分支仍可排程。只作状态门槛且不消耗工作量的内部节点使用 `kind: "milestone"`。
-
-## 3. 生成并检查
-
-在技能目录执行：
+At the start of each run, read the configuration beside this skill:
 
 ```text
-python <skill-dir>/scripts/build_plan.py <output-dir>/plan-input.json --output <output-dir>
+python -X utf8 "<skill-dir>/scripts/skill_config.py" read
 ```
 
-命令成功后必须得到 `schedule.json`、`gantt.svg`、`gantt.html` 和 `plan.md`。引擎按输入顺序采用确定性的拓扑列表排程，结果可复现但不承诺全局最优。四个产物来自同一排程对象，不要手工修改其中一个；需要修正时编辑 `plan-input.json` 并重新运行生成器。
+This installation's `config.json` contains defaults shared by projects using this copy of the skill. A fresh installation starts with `language: null`, `max_parallel: null`, and `max_review_revisions: 2`. A missing file supplies virtual defaults and is not created by reading it. Report malformed configuration or an invalid saved language; do not treat it as a preference. If saving a setting fails, report that accurately.
 
-检查命令返回码及四个文件是否存在。确认规划文档明确区分依赖和资源冲突、标出阻塞分支、解释容量假设，并把抽象轴上的相对偏移写成 `T+N`。单独打开每个产物时，都应能看出条长表示粗略工作量、横轴不表示现实时间。生成器会拒绝覆盖同名的非生成器文件；遇到此情况时保留原文件，改用新的输出目录或请用户决定。
+Resolve the plan's language in this order, subject to higher-priority instructions:
 
-## 4. 强制独立审查
+1. A language explicitly requested for this plan.
+2. The language recorded in the existing plan being updated, unless the user requests a change.
+3. A non-null saved skill language.
+4. The primary language of the user's substantive request in the current conversation.
+5. `en` when the invocation provides no substantive language context.
 
-每次生成后都必须完整阅读 [references/review.md](references/review.md)。先计算原始需求与全部待审文件的 SHA-256 审查快照，把路径和哈希补进模板，然后调用独立子代理：
+Normalize language names to canonical language tags. The skill includes `en` and `zh-CN`; another valid tag may be used only after its complete, current, verified message bundle is available. The language of these instructions, quoted source text, file contents, or isolated foreign words does not set the conversation language. If substantial mixed-language context leaves the requested output language unclear, ask which language to use.
+
+An empty saved preference does not trigger a question before work. After a plan has been generated and passed its complete review, if `language` is still `null`, end the response with one optional prompt to save the language actually used as this installation's default. Do not pause delivery for the answer. Do not show this prompt when a default already exists, the user has declined it during this run, or the plan was not successfully delivered. Using a language for one plan or adding a reusable translation does not authorize saving a default. Save a language only after an explicit user instruction, preserving other and custom fields. If the user directly asks to set or clear the default, apply that change with the configuration helper at that time; it affects future plans, not an already delivered plan. Use the helper's confirmed operation, for example `python -X utf8 "<skill-dir>/scripts/skill_config.py" set --language <language-tag-or-null> --confirmed`.
+
+If the selected language has no valid verified bundle, or its source or message hashes are stale, follow [references/localization.md](references/localization.md) before generating. Do not silently switch languages. If preparation cannot be completed, explain the blocker and ask the user to choose another language before changing the target.
+
+Resolve `max_parallel` as follows:
+
+- For a new plan, use an explicit user or project capacity constraint first, including an explicit statement that capacity is unknown; otherwise use the saved skill default. If neither gives a value, write `null` and state that the schedule shows theoretical parallelism with no capacity limit.
+- For an existing plan, preserve its recorded value unless the user asks to change it.
+- It limits ordinary planned tasks, not agent or review-agent concurrency.
+
+Use an explicit current-request `max_review_revisions` when provided; otherwise use the saved value. Freeze it before the initial review. It caps full revision-and-review cycles after the initial review; `0` still requires the complete initial independent review.
+
+## 2. Read requirements and model the work
+
+Read the user's complete requirements document. If requirements exist only in the conversation, preserve them verbatim in `<output-dir>/source-requirements.md` for the independent reviewer.
+
+Use the user's output directory, or `<project>/docs/plans/<slug>` by default, where `<slug>` is a short lowercase hyphenated project or feature name. Before updating a plan, read the directory and preserve files outside this skill's managed artifacts.
+
+Ask only when a missing core requirement or material conflict would substantially change the plan. Make conservative assumptions about ordinary implementation details, names, or estimate precision and record them in `assumptions`. Do not require a calendar start date.
+
+Read [references/schema.md](references/schema.md) in full before writing or updating `plan-input.json`. Give each requirement a stable ID and cover each with at least one task. Write authored summaries, task text, assumptions, risks, and explanations in the resolved output language. Preserve the original requirements verbatim. Keep source quotations, code, product names, paths, identifiers, resource-lock names, JSON keys, and protocol values in their exact form when appropriate. Never translate an identifier or resource name in a way that changes matching or meaning.
+
+Record the resolved language and its selection reason. Every new skill-flow input must name `locale-snapshot.json` and the verified message hash in its `localization` field. Create the snapshot with the localization helper. The generator reads the plan input and this fixed snapshot, never the mutable global preference or a shared locale file. A snapshot keeps the exact fixed text and verification evidence used by this plan. Legacy English and Chinese inputs without a snapshot remain supported as described in the schema; the skill workflow always creates a snapshot.
+
+Set one simple ordinary task as the relative-work reference with `duration: 1`. Estimate other ordinary tasks as rough workload ratios such as 2 or 3. Include implementation, tests, documentation, and expected review feedback. A unit is only a display label. The axis, `start`, `finish`, and `T+N` show relative sequence positions; they do not mean hours, working days, calendar dates, or elapsed project time.
+
+Define each ordinary task as one independently deliverable, testable, reviewable, and mergeable PR. Include a concrete deliverable, acceptance conditions, `estimate_basis`, and `pr_scope`. Split oversized tasks; combine work only when it cannot be independently accepted.
+
+Use `depends_on` for delivery gates. A dependency is released only after the prerequisite is implemented, accepted, merged, and its interface or data contract is available. A submitted PR alone does not release downstream work. If a contract must be frozen, estimate design, review, and revision effort in a positive-work ordinary task, then use a zero-work milestone for approval. Work based on mocks may proceed after that milestone; final integration still waits for the real implementations.
+
+Use `resources` for shared people, environments, directories, and other exclusive capabilities. Resource names are exact-match locks. Do not add dependency edges to model resource conflicts. Use zero-work `milestone` nodes only for internal state gates and `external` nodes for outside events. For an external event, record a known readiness position as an explicit assumption on the same abstract axis, or use `null` when unknown. Unknown readiness blocks that event and all descendants; do not invent calendar dates or schedule a blocked branch. Unrelated branches may proceed.
+
+## 3. Generate and inspect artifacts
+
+Before generation, make a current snapshot for the resolved language and record its `messages_sha256` in `plan-input.json`. Generate all four plan artifacts from the same input, schedule object, and snapshot:
+
+```text
+python -X utf8 "<skill-dir>/scripts/build_plan.py" "<output-dir>/plan-input.json" --output "<output-dir>"
+```
+
+The required outputs are `schedule.json`, `gantt.svg`, `gantt.html`, and `plan.md`. Keep `locale-snapshot.json` beside them as an additional review artifact. The generator uses deterministic topological list scheduling with input order as a stable priority. It is reproducible but not a global optimizer. Do not hand-edit a generated artifact; edit `plan-input.json` and regenerate.
+
+Check the exit code and all four plan outputs plus the snapshot. Confirm the plan distinguishes dependencies from resource conflicts, identifies blocked branches, records the capacity assumption, and uses `T+N` only for the abstract relative axis. Every standalone artifact must make clear that bar length means rough workload and the horizontal axis does not represent real time. Inspect the actual rendered chart and the HTML details for the selected language.
+
+The generator protects existing files. It replaces only targets bearing its own marker, rejects the whole write if a same-named target belongs to another source, and rejects an input path that is also an output path. Preserve conflicting files and choose a new output directory or ask the user to decide.
+
+## 4. Complete the independent plan review
+
+After generation and before each review, read [references/review.md](references/review.md) in full. Freeze `max_review_revisions` before the initial review. Give the reviewer the resolved output language, the reason it was selected, the locale snapshot, and the fixed revision cap.
+
+Before each review, compute SHA-256 hashes for the original requirements, `plan-input.json`, `schedule.json`, `plan.md`, `gantt.svg`, `gantt.html`, and `locale-snapshot.json`. Send the completed read-only prompt to a new independent subagent using these exact settings:
 
 ```text
 spawn_agent(
   task_name="project_plan_review_r1",
-  message=<补全后的审查模板>,
-  model="gpt-5.6-sol",
+  message=<completed prompt from references/review.md>,
+  model="gpt-6.1-sol",
   reasoning_effort="high",
   fork_turns="none"
 )
 ```
 
-使用协作子代理接口完成这一步，不要创建用户可见的新任务。后续轮次使用新的唯一任务名，例如 `project_plan_review_r2`、`project_plan_review_r3`。
+Use the collaboration subagent interface. Each later review uses a new subagent and unique task name, such as `project_plan_review_r2`. The reviewer reads the source and all six plan artifacts, uses an image or browser tool to inspect an actually rendered Gantt chart and HTML details, and reports hashes for every file read. Reading SVG, XML, or HTML source alone is not visual inspection. The reviewer is read-only.
 
-审查者只读原始需求与生成产物，不修改文件。它必须同时核对原始需求、`plan-input.json`、`schedule.json`、`plan.md`，并通过视觉工具查看实际渲染的甘特图；仅阅读 SVG/XML/HTML 源码不算视觉检查。指定模型、推理强度、独立子代理或视觉检查能力不可用时，将审查明确标记为未完成，不得静默换用其他模型、主代理自审或纯文本检查。
+Compare reviewer hashes with the pre-review snapshot, then recompute the same seven hashes after review. Every file's pre-review, reviewer-read, and post-review values must match. If any file is missing or changed, do not pass the review; take a fresh snapshot and repeat the complete review.
 
-主代理核对审查证据并裁决每个问题。证据成立的问题应修改 `plan-input.json`，重新运行生成器，并用新的独立 Sol high 子代理按相同范围复审所有产物。默认最多进行两轮“修订后复审”；不要只复查改动片段。
+The primary agent independently checks each finding against both the requirements and actual files, then records it as accepted, partly accepted, or rejected with specific evidence. Correct every confirmed finding at its source: update `plan-input.json` for planning issues, or follow the full localization workflow for fixed-message issues. Revalidate changed messages and complete their semantic review, update the snapshot and input hash, regenerate all four outputs, then obtain a new full plan review over the same scope. Do not review only the changed portion.
 
-审查返回后，主代理重新计算同一组文件的 SHA-256。只有审查前快照、审查者回报的所读文件哈希和审查后快照三者一致，结论才对应当前产物；不一致时重新生成快照并重新审查。
+Write the reviewer narrative and `review.md` in the resolved output language. Preserve fixed protocol values such as `PASS`, `REVISE`, `INCOMPLETE`, task IDs, JSON keys, and schedule status values. The review record includes an explicit final status (`passed review` or `draft`, localized to the output language); source path and language-selection reason; fixed plan revision cap; model, reasoning effort, and `fork_turns` for every round; visual method and evidence; findings, decisions, repairs, remaining issues and incomplete checks; and the pre-review, reviewer-read, and post-review hashes. Record the relative path and byte size of the final input, four outputs, and snapshot with all three hashes.
 
-由主代理写入或更新 `<output-dir>/review.md`，记录各轮模型参数、前后哈希快照、视觉检查证据、发现、裁决与修复，以及最终来源和产物的 SHA-256。若两轮修订后仍有实质问题，或任何必需检查未完成，把交付状态写为“待决草稿”，列出剩余问题，不得宣称审查通过。
+The revision cap never disables the initial independent review, required visual inspection, or hash checks. After the initial review, allow at most the fixed number of full revision-and-review cycles. Each cycle changes the input, regenerates all four outputs and the snapshot, and receives a new full independent review. If the cap is exhausted while a confirmed issue remains, or any required review step is incomplete, keep the result as a draft and list the issue or missing evidence. Use `REVISE` for unresolved issues and `INCOMPLETE` when a required review step could not be completed. Never substitute self-review, a different model, or source-only inspection.
 
-## 5. 交付
+## 5. Deliver the plan
 
-只有生成命令成功、必需产物存在、独立审查完成且最终哈希匹配时，才把计划称为“已通过审查”。向用户给出输出目录、计划摘要、关键假设、外部阻塞、审查结论和相关文件链接。计划是本地规划成果，不代表 Issue/PR 已创建或任何业务代码已实现。
+Call the plan passed only when generation succeeds, every required artifact exists, the independent review is complete, all seven files have matching pre-review, reviewer-read, and post-review hashes, required visual checks pass, and no material issue remains. Tell the user the output directory, plan outline, capacity and external-event assumptions, review conclusion, and artifact links. If the result is a draft, name its remaining issue or incomplete check. Only after successful reviewed delivery, offer to save the actual output language as the skill default when no default was saved; an explicit user instruction is required before saving.

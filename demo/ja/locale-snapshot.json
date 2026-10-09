@@ -1,0 +1,343 @@
+{
+  "generator": "project-planner/localization",
+  "version": 1,
+  "language": "ja",
+  "messages": {
+    "unit": "相対作業量単位",
+    "none": "なし",
+    "list_separator": "、",
+    "no_description": "説明なし",
+    "no_deliverable": "成果物の説明なし",
+    "plan_title": "プロジェクト計画",
+    "title": "タイトル",
+    "summary": "概要",
+    "workload_unit": "作業量の単位",
+    "capacity": "並行実行容量",
+    "capacity_unknown": "未確定；容量の上限を設けずにスケジュール",
+    "capacity_unknown_short": "未確定（容量上限なしのスケジュール）",
+    "workload_note": "作業量は概算です。T+N は相対位置を表し、時間、営業日、実際の暦上の所要期間を意味しません。タスクの棒の長さは作業量を表します。行全体の斜線はブロック状態のみを示します。",
+    "scheduling_note": "入力されたタスクの順序を固定優先順位としてスケジュールし、前提タスクの作業完了時に依存制約を解除します。この決定的なリストスケジューリングは大域的最適解を保証しません。",
+    "assumptions": "前提条件",
+    "risks": "リスク",
+    "requirements": "要件",
+    "requirement": "要件",
+    "source": "出典",
+    "coverage": "対応タスク",
+    "requirement_mapping": "要件とタスクの対応",
+    "schedule": "相対作業量スケジュール",
+    "task": "タスク",
+    "type": "種類",
+    "start": "相対開始位置",
+    "finish": "相対終了位置",
+    "workload": "作業量",
+    "dependencies": "依存関係",
+    "resources": "リソース",
+    "status": "状態",
+    "task_details": "タスクの詳細",
+    "description": "説明",
+    "deliverable": "成果物",
+    "acceptance": "受け入れ条件",
+    "pr_scope": "PR の対象範囲",
+    "estimate_basis": "見積もりの根拠",
+    "resource_locks": "リソースロック",
+    "scheduled": "スケジュール済み",
+    "blocked": "ブロック中",
+    "blocked_reason": "ブロック中（外部条件の準備状況が未確定：{items}）",
+    "chart_title": "プロジェクトのガントチャート",
+    "chart_desc": "{title}。棒の長さは概算の相対作業量を表します。横軸は抽象的な相対順序を示し、暦上の時間ではありません。ブロック中のタスクに架空の相対位置を割り当てません。",
+    "chart_caption": "作業量の単位：{unit} · 棒の長さ＝概算作業量",
+    "axis_caption": "横軸＝相対位置 · 実際の所要期間ではありません",
+    "legend_task": "タスク（棒の長さ＝作業量）",
+    "legend_milestone": "マイルストーン",
+    "legend_external": "外部項目",
+    "legend_blocked": "ブロック状態（行の背景）",
+    "blocked_label": "ブロック中：外部条件の準備状況が未確定（{items}）",
+    "blocked_count": "外部条件の準備状況が未確定のため、{count} 件のタスクがブロック中",
+    "schedule_span": "相対スケジュールの範囲：{finish}",
+    "arrow_note": "矢印は完了後に解除される依存関係を示します",
+    "empty_requirements": "要件なし",
+    "close": "閉じる",
+    "completion_blocked": "スケジュール可能部分の相対終了位置 {finish}；全体の相対終了位置は未確定",
+    "completion": "相対終了位置 {finish}",
+    "kind_task": "タスク",
+    "kind_milestone": "マイルストーン",
+    "kind_external": "外部項目"
+  },
+  "source_hashes": {
+    "en": "a44e544680c78e9f65751ed1394eca64fbab890a91b6405cc3f6a0763cae7dd2",
+    "zh-CN": "8bb60255bf9b95ac0883186d127da3510e3252a34cbefe3bc49c046a7c7bf3f5",
+    "context": "ab95dded1a672e830a75e8df31186477e2ef7406e895efb1eebf429f68f5d376"
+  },
+  "messages_sha256": "d737017e31e58344e9e7f81984477d0c57c898b2e0c0c08983536f29850ae32d",
+  "semantic_review": {
+    "status": "PASS",
+    "per_key": {
+      "unit": {
+        "status": "PASS",
+        "evidence": "EN “relative work units” / 中文“相对工作单位” and JA “相対作業量単位” all describe relative work units; this is not an elapsed-time unit."
+      },
+      "none": {
+        "status": "PASS",
+        "evidence": "EN “None” / 中文“无” and JA “なし” all mark absence; the renderer uses the value for empty lists or missing optional fields, not zero."
+      },
+      "list_separator": {
+        "status": "PASS",
+        "evidence": "EN comma-space and Chinese/Japanese “、” are locale punctuation choices; JA preserves list separation when the renderer joins IDs, resources, and blockers."
+      },
+      "no_description": {
+        "status": "PASS",
+        "evidence": "EN “No description” / 中文“无描述” and JA “説明なし” all mark an absent task description; this is the Markdown fallback."
+      },
+      "no_deliverable": {
+        "status": "PASS",
+        "evidence": "EN “No deliverable description” / 中文“无交付物描述” and JA “成果物の説明なし” all describe missing deliverable detail; this is the SVG row fallback."
+      },
+      "plan_title": {
+        "status": "PASS",
+        "evidence": "EN “Project plan” / 中文“项目计划” and JA “プロジェクト計画” give the same plan heading rendered at the top of Markdown."
+      },
+      "title": {
+        "status": "PASS",
+        "evidence": "EN “Title” / 中文“标题” and JA “タイトル” label the title field; the schedule’s supplied title remains unchanged."
+      },
+      "summary": {
+        "status": "PASS",
+        "evidence": "EN “Summary” / 中文“摘要” and JA “概要” label the summary field without claiming a different content type."
+      },
+      "workload_unit": {
+        "status": "PASS",
+        "evidence": "EN “Workload unit” / 中文“工作量单位” and JA “作業量の単位” all label the unit for workload."
+      },
+      "capacity": {
+        "status": "PASS",
+        "evidence": "EN “Parallel capacity” / 中文“并行容量” and JA “並行実行容量” denote the limit on parallel task execution."
+      },
+      "capacity_unknown": {
+        "status": "PASS",
+        "evidence": "EN and Chinese both say capacity is unknown and scheduling is unbounded; JA “未確定；容量の上限を設けずにスケジュール” preserves both the uncertainty and no-limit behavior."
+      },
+      "capacity_unknown_short": {
+        "status": "PASS",
+        "evidence": "EN “Unknown (unbounded scheduling)” / 中文“未知（按无上限排程）” and JA “未確定（容量上限なしのスケジュール）” retain unknown capacity and unbounded scheduling in the short pill."
+      },
+      "workload_note": {
+        "status": "PASS",
+        "evidence": "EN/CN state approximate workload, T+N as relative not hours/workdays/real duration, bars as workload, and hatching as blocked-status-only; JA line 14 preserves all four and limits the hatch meaning to status."
+      },
+      "scheduling_note": {
+        "status": "PASS",
+        "evidence": "EN/CN specify input order as stable priority, release on predecessor work completion, deterministic list scheduling, and no global-optimum promise; JA line 15 explicitly keeps 前提タスク, completion, determinism, and the disclaimer."
+      },
+      "assumptions": {
+        "status": "PASS",
+        "evidence": "EN “Assumptions” / 中文“假设” and JA “前提条件” name the plan’s assumptions section."
+      },
+      "risks": {
+        "status": "PASS",
+        "evidence": "EN “Risks” / 中文“风险” and JA “リスク” name the risks section."
+      },
+      "requirements": {
+        "status": "PASS",
+        "evidence": "EN plural “Requirements” / 中文“需求” and JA “要件” label the requirements collection; the language’s number-neutral form is appropriate."
+      },
+      "requirement": {
+        "status": "PASS",
+        "evidence": "EN singular “Requirement” / 中文“需求” and JA “要件” label one requirement in the mapping table."
+      },
+      "source": {
+        "status": "PASS",
+        "evidence": "EN “Source” / 中文“来源” and JA “出典” identify the provenance/source field, not a task dependency."
+      },
+      "coverage": {
+        "status": "PASS",
+        "evidence": "EN “Covering tasks” / 中文“覆盖任务” and JA “対応タスク” indicate the tasks corresponding to a requirement."
+      },
+      "requirement_mapping": {
+        "status": "PASS",
+        "evidence": "EN “Requirement mapping” / 中文“需求映射” and JA “要件とタスクの対応” explicitly express the same requirement-to-task mapping."
+      },
+      "schedule": {
+        "status": "PASS",
+        "evidence": "EN “Relative workload schedule” / 中文“相对工作量排程” and JA “相対作業量スケジュール” retain both relativity and workload basis."
+      },
+      "task": {
+        "status": "PASS",
+        "evidence": "EN “Task” / 中文“任务” and JA “タスク” are equivalent task labels."
+      },
+      "type": {
+        "status": "PASS",
+        "evidence": "EN “Type” / 中文“类型” and JA “種類” label the task kind/type column."
+      },
+      "start": {
+        "status": "PASS",
+        "evidence": "EN “Relative start” / 中文“相对起点” and JA “相対開始位置” express a relative start position, not a date."
+      },
+      "finish": {
+        "status": "PASS",
+        "evidence": "EN “Relative finish” / 中文“相对终点” and JA “相対終了位置” express the relative endpoint, not an elapsed duration."
+      },
+      "workload": {
+        "status": "PASS",
+        "evidence": "EN “Workload” / 中文“工作量” and JA “作業量” name the amount represented by each scheduled task bar."
+      },
+      "dependencies": {
+        "status": "PASS",
+        "evidence": "EN “Dependencies” / 中文“依赖” and JA “依存関係” label task prerequisite relationships."
+      },
+      "resources": {
+        "status": "PASS",
+        "evidence": "EN “Resources” / 中文“资源” and JA “リソース” label assigned task resources."
+      },
+      "status": {
+        "status": "PASS",
+        "evidence": "EN “Status” / 中文“状态” and JA “状態” label state; no protocol value is translated."
+      },
+      "task_details": {
+        "status": "PASS",
+        "evidence": "EN “Task details” / 中文“任务详情” and JA “タスクの詳細” head the per-task detail UI."
+      },
+      "description": {
+        "status": "PASS",
+        "evidence": "EN “Description” / 中文“描述” and JA “説明” are equivalent detail-field labels."
+      },
+      "deliverable": {
+        "status": "PASS",
+        "evidence": "EN “Deliverable” / 中文“交付物” and JA “成果物” identify the task output."
+      },
+      "acceptance": {
+        "status": "PASS",
+        "evidence": "EN “Acceptance criteria” / 中文“验收标准” and JA “受け入れ条件” both mean conditions for accepting the result."
+      },
+      "pr_scope": {
+        "status": "PASS",
+        "evidence": "EN “PR scope” / 中文“PR 边界” and JA “PR の対象範囲” label the scope covered by the pull request."
+      },
+      "estimate_basis": {
+        "status": "PASS",
+        "evidence": "EN “Estimate basis” / 中文“估算依据” and JA “見積もりの根拠” label the rationale for the estimate."
+      },
+      "resource_locks": {
+        "status": "PASS",
+        "evidence": "EN “Resource locks” / 中文“资源锁” and JA “リソースロック” all identify resources held/locked for the task."
+      },
+      "scheduled": {
+        "status": "PASS",
+        "evidence": "EN “Scheduled” / 中文“已排程” and JA “スケジュール済み” label the scheduled state in human-readable text while leaving the state token unchanged."
+      },
+      "blocked": {
+        "status": "PASS",
+        "evidence": "EN “Blocked” / 中文“阻塞” and JA “ブロック中” label the distinct blocked state."
+      },
+      "blocked_reason": {
+        "status": "PASS",
+        "evidence": "EN/CN say blocked due to unknown or pending external readiness; JA “外部条件の準備状況が未確定” retains the external condition, readiness uncertainty, and {items} blockers."
+      },
+      "chart_title": {
+        "status": "PASS",
+        "evidence": "EN “Project Gantt chart” / 中文“项目甘特图” and JA “プロジェクトのガントチャート” title the same chart."
+      },
+      "chart_desc": {
+        "status": "PASS",
+        "evidence": "EN/CN preserve approximate relative workload, abstract relative ordering rather than calendar time, and no invented positions for blocked tasks; JA line 43 preserves all three and uses {title} for the schedule title."
+      },
+      "chart_caption": {
+        "status": "PASS",
+        "evidence": "EN/CN pair the workload unit {unit} with approximate bar workload; JA line 44 retains both and the same placeholder purpose."
+      },
+      "axis_caption": {
+        "status": "PASS",
+        "evidence": "EN/CN rule out actual/calendar duration; JA “横軸＝相対位置 · 実際の所要期間ではありません” preserves relative position and denies actual duration."
+      },
+      "legend_task": {
+        "status": "PASS",
+        "evidence": "EN/CN label task and bar-length/workload; JA “タスク（棒の長さ＝作業量）” retains both parts in the SVG legend."
+      },
+      "legend_milestone": {
+        "status": "PASS",
+        "evidence": "EN “Milestone” / 中文“里程碑” and JA “マイルストーン” identify the same category."
+      },
+      "legend_external": {
+        "status": "PASS",
+        "evidence": "EN “External item” / 中文“外部项” and JA “外部項目” keep external items distinct from tasks and milestones."
+      },
+      "legend_blocked": {
+        "status": "PASS",
+        "evidence": "EN/CN specify blocked state shown by row background; JA “ブロック状態（行の背景）” preserves both state and visual encoding."
+      },
+      "blocked_label": {
+        "status": "PASS",
+        "evidence": "EN/CN label blocked status due to unknown/pending external readiness; JA preserves that cause and the {items} external-condition list."
+      },
+      "blocked_count": {
+        "status": "PASS",
+        "evidence": "EN/CN report {count} tasks blocked by uncertain external readiness; JA preserves the count, task unit, reason, and blocked status."
+      },
+      "schedule_span": {
+        "status": "PASS",
+        "evidence": "EN/CN give a relative schedule span ending at {finish}; JA “相対スケジュールの範囲：{finish}” preserves relative scope and endpoint."
+      },
+      "arrow_note": {
+        "status": "PASS",
+        "evidence": "JA says arrows indicate dependencies released after completion, matching EN; CN makes predecessor explicit. In the SVG the arrow begins at the predecessor’s finish (build_plan.py:623–632), so the chart context resolves the omitted subject without changing the release condition."
+      },
+      "empty_requirements": {
+        "status": "PASS",
+        "evidence": "EN “No requirements” / 中文“无需求” and JA “要件なし” all state that the mapping table has no requirement rows."
+      },
+      "close": {
+        "status": "PASS",
+        "evidence": "EN “Close” / 中文“关闭” and JA “閉じる” give the dialog’s close button the same action."
+      },
+      "completion_blocked": {
+        "status": "PASS",
+        "evidence": "EN/CN distinguish schedulable finish {finish} from unknown overall finish; JA “スケジュール可能部分…全体の相対終了位置は未確定” retains both the partial endpoint and overall uncertainty."
+      },
+      "completion": {
+        "status": "PASS",
+        "evidence": "EN/CN give a relative finish {finish}; JA “相対終了位置 {finish}” reports the same relative endpoint without implying calendar time."
+      },
+      "kind_task": {
+        "status": "PASS",
+        "evidence": "EN “Task” / 中文“任务” and JA “タスク” correctly label a task kind in the details UI."
+      },
+      "kind_milestone": {
+        "status": "PASS",
+        "evidence": "EN “Milestone” / 中文“里程碑” and JA “マイルストーン” correctly label a milestone kind."
+      },
+      "kind_external": {
+        "status": "PASS",
+        "evidence": "EN “External item” / 中文“外部项” and JA “外部項目” correctly label the external-item kind."
+      }
+    },
+    "reviewer": {
+      "identity": "/root/independent_semantics_flow",
+      "fork_turns": "none"
+    },
+    "hashes": {
+      "before": {
+        "source_hashes": {
+          "en": "a44e544680c78e9f65751ed1394eca64fbab890a91b6405cc3f6a0763cae7dd2",
+          "zh-CN": "8bb60255bf9b95ac0883186d127da3510e3252a34cbefe3bc49c046a7c7bf3f5",
+          "context": "ab95dded1a672e830a75e8df31186477e2ef7406e895efb1eebf429f68f5d376"
+        },
+        "messages_sha256": "d737017e31e58344e9e7f81984477d0c57c898b2e0c0c08983536f29850ae32d"
+      },
+      "read": {
+        "source_hashes": {
+          "en": "a44e544680c78e9f65751ed1394eca64fbab890a91b6405cc3f6a0763cae7dd2",
+          "zh-CN": "8bb60255bf9b95ac0883186d127da3510e3252a34cbefe3bc49c046a7c7bf3f5",
+          "context": "ab95dded1a672e830a75e8df31186477e2ef7406e895efb1eebf429f68f5d376"
+        },
+        "messages_sha256": "d737017e31e58344e9e7f81984477d0c57c898b2e0c0c08983536f29850ae32d"
+      },
+      "after": {
+        "source_hashes": {
+          "en": "a44e544680c78e9f65751ed1394eca64fbab890a91b6405cc3f6a0763cae7dd2",
+          "zh-CN": "8bb60255bf9b95ac0883186d127da3510e3252a34cbefe3bc49c046a7c7bf3f5",
+          "context": "ab95dded1a672e830a75e8df31186477e2ef7406e895efb1eebf429f68f5d376"
+        },
+        "messages_sha256": "d737017e31e58344e9e7f81984477d0c57c898b2e0c0c08983536f29850ae32d"
+      }
+    }
+  }
+}
