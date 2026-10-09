@@ -65,6 +65,8 @@ Use `resources` for shared people, environments, directories, and other exclusiv
 
 Before generation, make a current snapshot for the resolved language and record its `messages_sha256` in `plan-input.json`. Generate all four plan artifacts from the same input, schedule object, and snapshot:
 
+For an explicitly requested language change of an existing plan, follow the `--replace-language` snapshot procedure in [references/localization.md](references/localization.md). Update authored plan text and the input's language and message hash, then regenerate and fully review the plan; the saved default changes only if separately authorized.
+
 ```text
 python -X utf8 "<skill-dir>/scripts/build_plan.py" "<output-dir>/plan-input.json" --output "<output-dir>"
 ```

@@ -8,6 +8,8 @@ The English and Simplified Chinese JSON files in `scripts/locales/` are the sour
 
 Use the localization helper for canonical language tags and fingerprints. A syntactically valid tag does not prove that a verified bundle exists. Never turn an untrusted language string directly into a file path. The English source and Chinese comparison may reveal a semantic conflict; resolve the source conflict before translating or publishing anything. Source fingerprints are SHA-256 over raw source/context file bytes. Message hashes use the helper's canonical JSON representation; obtain them from the helper rather than calculating them independently.
 
+Tag normalization checks ordinary BCP 47 syntax, applies standard casing, and accepts all 26 fixed grandfathered tags. It uses their IANA Preferred-Value when present, for example `i-klingon` becomes `tlh`, `en-GB-oed` becomes `en-GB-oxendict`, and `art-lojban` becomes `jbo`; tags without a replacement, such as `i-default`, retain their registered spelling. This local helper does not query the registry, validate registration of every ordinary subtag or extension, or perform all registry-based alias transformations (for example `iw` remains `iw`). New preferences and bundles use the normalized tag. Existing plan snapshots with a recognized old tag remain valid offline if their embedded message and review proof is valid; they are not rewritten by reading. To reuse a shared package under a newly preferred tag, publish a currently reviewed bundle at the normalized path; preserve the old package rather than renaming it or inventing fresh proof. See [RFC 5646](https://www.rfc-editor.org/rfc/rfc5646.html) and the [IANA registry](https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry).
+
 Inspect the authoritative sources and their fingerprints:
 
 ```text
@@ -118,13 +120,15 @@ Create a plan-local snapshot for every new skill-flow plan. It stores the select
 python -X utf8 "<skill-dir>/scripts/localization.py" snapshot --language <language-tag> --output "<output-dir>/locale-snapshot.json"
 ```
 
+When the user explicitly requests a different language for an existing plan in the same directory, add `--replace-language` to this command. Update the plan input's language, authored text, and snapshot message hash, regenerate all four artifacts, and complete the full independent plan review. The flag permits replacing only a valid snapshot owned by this helper with a known version and recognized language; without it, a cross-language replacement is refused. It does not change the saved skill preference or allow overwriting persistent `user-locales/` packages.
+
 If publishing the long-term bundle fails after the candidate has passed full review, create the plan-local snapshot directly from the same candidate and review:
 
 ```text
 python -X utf8 "<skill-dir>/scripts/localization.py" snapshot --language <language-tag> --output "<output-dir>/locale-snapshot.json" --messages "<candidate-messages.json>" --review "<semantic-review.json>"
 ```
 
-The candidate and review arguments must be supplied together. This recovery permits the current plan to proceed from the verified snapshot when the output directory is writable; report that long-term locale publication failed. Do not claim the language was saved for later plans. The helper preserves files it does not own. It may replace a damaged or hash-mismatched file only when that file carries this helper's exact generator marker, version `1`, and canonical language; it rejects unknown versions, language mismatches, and symbolic links.
+The candidate and review arguments must be supplied together; the same `--replace-language` option applies when changing an existing plan's language with a reviewed candidate. This recovery permits the current plan to proceed from the verified snapshot when the output directory is writable; report that long-term locale publication failed. Do not claim the language was saved for later plans. The helper preserves files it does not own. It may repair a damaged or hash-mismatched target only when it carries this helper's exact generator marker, version `1`, and the same canonical language. Persistent bundles always require matching language ownership. Snapshots permit a different language only with the explicit flag and valid existing proof; unknown versions, unrecognized ownership, symbolic links, and source or persistent-package targets remain protected.
 
 When creating a new plan, the `snapshot` command checks the current source hashes and bilingual baseline whether it reads a published bundle or a candidate. A changed source, context, or catalog hash makes an old shared bundle ineligible for reuse. Candidate-based snapshot creation also verifies the candidate against current sources and its full matching review before saving. After the plan-local snapshot exists, the generator validates its embedded proof and exact message hash offline without reading mutable skill configuration or source catalogs. This keeps the reviewed plan reproducible if shared locale files change afterward.
 

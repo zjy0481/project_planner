@@ -4,7 +4,7 @@
   "source_hashes": {
     "en": "a44e544680c78e9f65751ed1394eca64fbab890a91b6405cc3f6a0763cae7dd2",
     "zh-CN": "8bb60255bf9b95ac0883186d127da3510e3252a34cbefe3bc49c046a7c7bf3f5",
-    "context": "ab95dded1a672e830a75e8df31186477e2ef7406e895efb1eebf429f68f5d376"
+    "context": "43eabce0b27589d6ae6ed4dd4755c179ea0d59425206272d686a6a7fa7a84bdd"
   },
   "messages_sha256": {
     "en": "2902e1a4a6abab0e6eda1534e820f67bcd795489c499d20d63158401d6efad34",
@@ -15,243 +15,243 @@
     "per_key": {
       "unit": {
         "status": "PASS",
-        "evidence": "EN “relative work units” (en.json:2) and 中文“相对工作单位” (zh-CN.json:2) both define a relative work unit; neither denotes elapsed time."
+        "evidence": "EN “relative work units” 对应 ZH“相对工作单位”；两者都表示相对工作量单位，不暗示小时或日历工期，作为工作量单位标签使用。"
       },
       "none": {
         "status": "PASS",
-        "evidence": "EN “None” and 中文“无” both mark absence. The renderer uses this for empty lists and missing optional values, not for numeric zero."
+        "evidence": "EN“None”与 ZH“无”都表示没有值；两者用于空列表及缺失字段的占位显示。"
       },
       "list_separator": {
         "status": "PASS",
-        "evidence": "EN comma-space and 中文顿号 differ only in locale punctuation; each joins the same ordered item list."
+        "evidence": "EN 用“, ”分隔列表，ZH 用中文顿号“、”；两者都只承担列表分隔作用，适用于需求、依赖及资源列表。"
       },
       "no_description": {
         "status": "PASS",
-        "evidence": "EN “No description” and 中文“无描述” both state that a task description is absent; the key is used as the empty task-description placeholder."
+        "evidence": "EN“No description”与 ZH“无描述”都表示任务描述缺失；该键用于 Markdown 任务详情的空描述回退。"
       },
       "no_deliverable": {
         "status": "PASS",
-        "evidence": "EN “No deliverable description” and 中文“无交付物描述” both identify missing deliverable detail, matching the SVG row fallback."
+        "evidence": "EN“No deliverable description”与 ZH“无交付物描述”都表示图表行没有交付物说明，不会把“无交付物”误写成“有交付物”。"
       },
       "plan_title": {
         "status": "PASS",
-        "evidence": "EN “Project plan” and 中文“项目计划” are equivalent top-level plan headings."
+        "evidence": "EN“Project plan”对应 ZH“项目计划”；两者都是整体计划标题，用作 Markdown 一级标题。"
       },
       "title": {
         "status": "PASS",
-        "evidence": "EN “Title” and 中文“标题” label the plan title field without changing the user-provided title."
+        "evidence": "EN“Title”对应 ZH“标题”；两者都是计划标题字段的标签。"
       },
       "summary": {
         "status": "PASS",
-        "evidence": "EN “Summary” and 中文“摘要” label the plan summary field."
+        "evidence": "EN“Summary”对应 ZH“摘要”；两者都是计划摘要字段的标签。"
       },
       "workload_unit": {
         "status": "PASS",
-        "evidence": "EN “Workload unit” and 中文“工作量单位” both identify the unit assigned to workload."
+        "evidence": "EN“Workload unit”对应 ZH“工作量单位”；两者都标注工作量单位字段。"
       },
       "capacity": {
         "status": "PASS",
-        "evidence": "EN “Parallel capacity” and 中文“并行容量” both refer to the task parallelism limit, not workload or total project size."
+        "evidence": "EN“Parallel capacity”对应 ZH“并行容量”；两者指并行任务容量，不与代理并发混为一谈。"
       },
       "capacity_unknown": {
         "status": "PASS",
-        "evidence": "EN says capacity is unknown and scheduling proceeds without a capacity limit; 中文“未知；排程按无容量上限处理” preserves both clauses."
+        "evidence": "EN 表示容量未知且按无容量限制排程；ZH“未知；排程按无容量上限处理”保留未知状态和无上限排程处理方式。"
       },
       "capacity_unknown_short": {
         "status": "PASS",
-        "evidence": "EN “Unknown (unbounded scheduling)” and 中文“未知（按无上限排程）” retain the unknown value and unbounded-scheduling qualification."
+        "evidence": "EN“Unknown (unbounded scheduling)”对应 ZH“未知（按无上限排程）”；短标签保留容量未知及排程不设上限两层意思。"
       },
       "workload_note": {
         "status": "PASS",
-        "evidence": "Both full notes call workload approximate, define T+N as relative rather than hours/workdays/elapsed duration, map bar length to workload, and say full-row hatching indicates only blocked status."
+        "evidence": "EN 保留工作量近似、T+N 只表示相对位置而非小时/工作日/日历时长、任务条长表示工作量、整行斜纹只表示阻塞状态；ZH 分别表达粗略估算、不换算为实际工期、普通任务条长表示工作量及阻塞行条纹只表示状态。"
       },
       "scheduling_note": {
         "status": "PASS",
-        "evidence": "Both sentences use input task order as stable priority, release dependencies after predecessor work ends, describe deterministic list scheduling, and disclaim a global optimum."
+        "evidence": "EN 与 ZH 都说明按输入任务顺序作稳定优先级、前置工作结束后释放依赖、列表调度结果确定但不保证全局最优；条件和“不保证”限制均保留。"
       },
       "assumptions": {
         "status": "PASS",
-        "evidence": "EN “Assumptions” and 中文“假设” are equivalent section headings for plan assumptions."
+        "evidence": "EN“Assumptions”对应 ZH“假设”；用于计划假设章节标题。"
       },
       "risks": {
         "status": "PASS",
-        "evidence": "EN “Risks” and 中文“风险” are equivalent risk-section headings."
+        "evidence": "EN“Risks”对应 ZH“风险”；用于计划风险章节标题。"
       },
       "requirements": {
         "status": "PASS",
-        "evidence": "EN plural “Requirements” and 中文“需求” both label the collection of requirements; Chinese does not encode number morphologically."
+        "evidence": "EN“Requirements”对应 ZH“需求”；用于任务详情中的需求列表标签，复数集合语境一致。"
       },
       "requirement": {
         "status": "PASS",
-        "evidence": "EN singular “Requirement” and 中文“需求” both label one requirement in the mapping table."
+        "evidence": "EN“Requirement”对应 ZH“需求”；用于需求映射表单条需求列标题。"
       },
       "source": {
         "status": "PASS",
-        "evidence": "EN “Source” and 中文“来源” both label the provenance/source field of a requirement."
+        "evidence": "EN“Source”对应 ZH“来源”；用于需求映射表中每项需求的来源列。"
       },
       "coverage": {
         "status": "PASS",
-        "evidence": "EN “Covering tasks” and 中文“覆盖任务” both identify tasks that cover a requirement, not requirements covered by a task."
+        "evidence": "EN“Covering tasks”对应 ZH“覆盖任务”；在需求映射表中列出覆盖该需求的任务 ID，表头与列内容语义相符。"
       },
       "requirement_mapping": {
         "status": "PASS",
-        "evidence": "EN “Requirement mapping” and 中文“需求映射” both name the requirement-to-task correspondence section."
+        "evidence": "EN“Requirement mapping”对应 ZH“需求映射”；两者都是需求与任务覆盖关系的章节标题。"
       },
       "schedule": {
         "status": "PASS",
-        "evidence": "EN “Relative workload schedule” and 中文“相对工作量排程” both make the schedule relative and workload-based."
+        "evidence": "EN“Relative workload schedule”对应 ZH“相对工作量排程”；均明确是相对工作量排程，用于表格及 HTML 元信息标签。"
       },
       "task": {
         "status": "PASS",
-        "evidence": "EN “Task” and 中文“任务” are equivalent row/section labels."
+        "evidence": "EN“Task”对应 ZH“任务”；用于计划表中的任务列标题。"
       },
       "type": {
         "status": "PASS",
-        "evidence": "EN “Type” and 中文“类型” both label the task-kind column."
+        "evidence": "EN“Type”对应 ZH“类型”；两者都标注任务、里程碑或外部项的类别。"
       },
       "start": {
         "status": "PASS",
-        "evidence": "EN “Relative start” and 中文“相对起点” preserve a relative start coordinate, not a calendar start date."
+        "evidence": "EN“Relative start”对应 ZH“相对起点”；均表示相对轴上的开始位置，而非现实开始日期。"
       },
       "finish": {
         "status": "PASS",
-        "evidence": "EN “Relative finish” and 中文“相对终点” preserve a relative endpoint, not a calendar end date."
+        "evidence": "EN“Relative finish”对应 ZH“相对终点”；均表示相对轴上的结束位置，而非现实完成日期。"
       },
       "workload": {
         "status": "PASS",
-        "evidence": "EN “Workload” and 中文“工作量” both name the amount represented by task bars and the schedule column."
+        "evidence": "EN“Workload”对应 ZH“工作量”；用于列/详情标签，不把工作量误称为经过的时间。"
       },
       "dependencies": {
         "status": "PASS",
-        "evidence": "EN “Dependencies” and 中文“依赖” both label predecessor relationships."
+        "evidence": "EN“Dependencies”对应 ZH“依赖”；用于任务依赖列表及表头。"
       },
       "resources": {
         "status": "PASS",
-        "evidence": "EN “Resources” and 中文“资源” both label the resources assigned to a task."
+        "evidence": "EN“Resources”对应 ZH“资源”；用于任务所用资源列表，和依赖字段分开显示。"
       },
       "status": {
         "status": "PASS",
-        "evidence": "EN “Status” and 中文“状态” both label the state field without altering the underlying status value."
+        "evidence": "EN“Status”对应 ZH“状态”；用于任务状态列及详情字段。"
       },
       "task_details": {
         "status": "PASS",
-        "evidence": "EN “Task details” and 中文“任务详情” both head the per-task detail section."
+        "evidence": "EN“Task details”对应 ZH“任务详情”；均引出逐任务详情区。"
       },
       "description": {
         "status": "PASS",
-        "evidence": "EN “Description” and 中文“描述” are equivalent detail-field labels."
+        "evidence": "EN“Description”对应 ZH“描述”；用于详情中的描述字段标签。"
       },
       "deliverable": {
         "status": "PASS",
-        "evidence": "EN “Deliverable” and 中文“交付物” identify what the task produces."
+        "evidence": "EN“Deliverable”对应 ZH“交付物”；用于任务详情字段，未与描述或验收标准混淆。"
       },
       "acceptance": {
         "status": "PASS",
-        "evidence": "EN “Acceptance criteria” and 中文“验收标准” both mean the criteria for accepting task completion."
+        "evidence": "EN“Acceptance criteria”对应 ZH“验收标准”；都指验收条件/标准列表。"
       },
       "pr_scope": {
         "status": "PASS",
-        "evidence": "EN “PR scope” and 中文“PR 边界” both label the task’s pull-request scope."
+        "evidence": "EN“PR scope”对应 ZH“PR 边界”；都标注该任务 PR 所含工作范围，在详情字段中使用。"
       },
       "estimate_basis": {
         "status": "PASS",
-        "evidence": "EN “Estimate basis” and 中文“估算依据” both identify the rationale behind the estimate."
+        "evidence": "EN“Estimate basis”对应 ZH“估算依据”；都表示任务估算的依据。"
       },
       "resource_locks": {
         "status": "PASS",
-        "evidence": "EN “Resource locks” and 中文“资源锁” both identify locked resources; Chinese/Japanese-style lack of plural marking does not change the set."
+        "evidence": "EN“Resource locks”对应 ZH“资源锁”；在详情中单独列出互斥资源锁，与普通依赖列表和资源标签分开。"
       },
       "scheduled": {
         "status": "PASS",
-        "evidence": "EN “Scheduled” and 中文“已排程” are human-readable labels for the scheduled state; neither changes the protocol value."
+        "evidence": "EN“Scheduled”对应 ZH“已排程”；作为人可读状态标签出现，协议状态值仍由数据中的 scheduled 保持。"
       },
       "blocked": {
         "status": "PASS",
-        "evidence": "EN “Blocked” and 中文“阻塞” are labels for the blocked state, distinct from scheduled."
+        "evidence": "EN“Blocked”对应 ZH“阻塞”；作为人可读阻塞状态标签出现，协议状态值仍由数据中的 blocked 保持。"
       },
       "blocked_reason": {
         "status": "PASS",
-        "evidence": "Both state that the task is blocked because external readiness is unknown/pending confirmation and preserve the {items} list of blockers."
+        "evidence": "EN 表示“Blocked (external readiness unknown: {items})”；ZH“阻塞（外部条件待确认：{items}）”保留阻塞、外部就绪未知/待确认及项目列表；两边占位符均为 {items}，用于阻塞来源列表。"
       },
       "chart_title": {
         "status": "PASS",
-        "evidence": "EN “Project Gantt chart” and 中文“项目甘特图” both title the same chart."
+        "evidence": "EN“Project Gantt chart”对应 ZH“项目甘特图”；用作 SVG 图表标题及 HTML 图表区域无障碍标签。"
       },
       "chart_desc": {
         "status": "PASS",
-        "evidence": "Both descriptions say bar length is approximate relative workload, the axis is abstract relative order rather than calendar time, and blocked tasks receive no invented relative offset."
+        "evidence": "EN 与 ZH 都说明条长是粗略相对工作量、横轴是抽象相对顺序而非日历时间、阻塞任务没有虚构相对偏移；{title} 在两种语言中均插入计划标题。"
       },
       "chart_caption": {
         "status": "PASS",
-        "evidence": "Both show the workload unit via {unit} and explain that bar length is approximate workload."
+        "evidence": "EN 与 ZH 都标注工作量单位并说明条长对应粗略工作量；{unit} 在两种语言中均插入单位。"
       },
       "axis_caption": {
         "status": "PASS",
-        "evidence": "Both distinguish a relative-position axis from actual duration; “no calendar duration” and “不代表实际工期” convey the same limit."
+        "evidence": "EN“relative position / no calendar duration”对应 ZH“相对位置 / 不代表实际工期”；两者都限制横轴为相对位置，不给出现实工期承诺。"
       },
       "legend_task": {
         "status": "PASS",
-        "evidence": "Both identify a task mark and explain that its bar length denotes workload; the legend makes no stronger precision claim."
+        "evidence": "EN“Task (bar length = workload)”对应 ZH“任务（条长=工作量）”；图例将任务条长与工作量对应。"
       },
       "legend_milestone": {
         "status": "PASS",
-        "evidence": "EN “Milestone” and 中文“里程碑” name the same milestone category."
+        "evidence": "EN“Milestone”对应 ZH“里程碑”；图例类型准确区别于任务和外部项。"
       },
       "legend_external": {
         "status": "PASS",
-        "evidence": "EN “External item” and 中文“外部项” name an external item without conflating it with a task or milestone."
+        "evidence": "EN“External item”对应 ZH“外部项”；图例保留独立外部类别，与任务、里程碑及资源锁区别。"
       },
       "legend_blocked": {
         "status": "PASS",
-        "evidence": "Both identify blocked state and specify row background as its visual encoding."
+        "evidence": "EN“Blocked state (row background)”对应 ZH“阻塞状态（整行背景）”；图例说明整行背景表示阻塞状态。"
       },
       "blocked_label": {
         "status": "PASS",
-        "evidence": "Both label a blocked task, attribute it to unknown/pending external readiness, and retain {items}."
+        "evidence": "EN 表示阻塞且外部就绪状态未知；ZH“阻塞：外部条件待确认”保留阻塞及未确认条件；{items} 在两边都插入相关外部项。"
       },
       "blocked_count": {
         "status": "PASS",
-        "evidence": "Both report {count} tasks blocked because external readiness is unknown/pending confirmation."
+        "evidence": "EN“{count} tasks blocked by unknown external readiness”对应 ZH“{count} 个任务因外部条件待确认而阻塞”；数量仍指被阻塞任务数，{count} 用途一致。"
       },
       "schedule_span": {
         "status": "PASS",
-        "evidence": "Both report a relative schedule span and retain {finish} as its endpoint."
+        "evidence": "EN“Relative schedule span: {finish}”对应 ZH“相对排程跨度：{finish}”；均以相对终点填充跨度值，{finish} 用途一致。"
       },
       "arrow_note": {
         "status": "PASS",
-        "evidence": "EN leaves the completing task implicit; 中文 specifies the predecessor. This is compatible, not contradictory: the renderer draws the dependency arrow from the predecessor finish, and scheduling_note names predecessor completion."
+        "evidence": "EN 说箭头表示依赖在完成后释放；ZH 说箭头表示依赖关系且依赖在前置任务完成后才释放，依赖门槛和箭头含义均保留。"
       },
       "empty_requirements": {
         "status": "PASS",
-        "evidence": "EN “No requirements” and 中文“无需求” both state that the requirements table is empty."
+        "evidence": "EN“No requirements”对应 ZH“无需求”；用于需求表为空时的单元格提示。"
       },
       "close": {
         "status": "PASS",
-        "evidence": "EN “Close” and 中文“关闭” are equivalent dialog-button actions."
+        "evidence": "EN“Close”对应 ZH“关闭”；均为关闭详情弹窗的按钮文字。"
       },
       "completion_blocked": {
         "status": "PASS",
-        "evidence": "Both distinguish the schedulable portion’s relative finish {finish} from an unknown overall relative finish; neither claims the whole plan is complete."
+        "evidence": "EN 表示可排程部分的相对终点并明确整体相对终点未知；ZH“可排程相对终点 {finish}，整体相对终点未知”保留两部分及不确定性，{finish} 用于可排程终点。"
       },
       "completion": {
         "status": "PASS",
-        "evidence": "Both report only a relative finish {finish}, without implying calendar duration."
+        "evidence": "EN“Relative finish {finish}”对应 ZH“相对终点 {finish}”；均只报告相对终点，{finish} 用途一致。"
       },
       "kind_task": {
         "status": "PASS",
-        "evidence": "EN “Task” and 中文“任务” correctly label the task kind in the detail display."
+        "evidence": "EN“Task”对应 ZH“任务”；用于类型显示，保留任务类别。"
       },
       "kind_milestone": {
         "status": "PASS",
-        "evidence": "EN “Milestone” and 中文“里程碑” correctly label the milestone kind."
+        "evidence": "EN“Milestone”对应 ZH“里程碑”；用于类型显示，保留里程碑类别。"
       },
       "kind_external": {
         "status": "PASS",
-        "evidence": "EN “External item” and 中文“外部项” correctly label the external-item kind."
+        "evidence": "EN“External item”对应 ZH“外部项”；用于类型显示，保留独立外部类别，与任务和里程碑区分。"
       }
     },
     "reviewer": {
-      "identity": "/root/independent_semantics_flow",
+      "identity": "Subagent /root/baseline_fixes_semantics (gpt-6-luna/max)",
       "fork_turns": "none"
     },
     "hashes": {
@@ -259,7 +259,7 @@
         "source_hashes": {
           "en": "a44e544680c78e9f65751ed1394eca64fbab890a91b6405cc3f6a0763cae7dd2",
           "zh-CN": "8bb60255bf9b95ac0883186d127da3510e3252a34cbefe3bc49c046a7c7bf3f5",
-          "context": "ab95dded1a672e830a75e8df31186477e2ef7406e895efb1eebf429f68f5d376"
+          "context": "43eabce0b27589d6ae6ed4dd4755c179ea0d59425206272d686a6a7fa7a84bdd"
         },
         "messages_sha256": {
           "en": "2902e1a4a6abab0e6eda1534e820f67bcd795489c499d20d63158401d6efad34",
@@ -270,7 +270,7 @@
         "source_hashes": {
           "en": "a44e544680c78e9f65751ed1394eca64fbab890a91b6405cc3f6a0763cae7dd2",
           "zh-CN": "8bb60255bf9b95ac0883186d127da3510e3252a34cbefe3bc49c046a7c7bf3f5",
-          "context": "ab95dded1a672e830a75e8df31186477e2ef7406e895efb1eebf429f68f5d376"
+          "context": "43eabce0b27589d6ae6ed4dd4755c179ea0d59425206272d686a6a7fa7a84bdd"
         },
         "messages_sha256": {
           "en": "2902e1a4a6abab0e6eda1534e820f67bcd795489c499d20d63158401d6efad34",
@@ -281,7 +281,7 @@
         "source_hashes": {
           "en": "a44e544680c78e9f65751ed1394eca64fbab890a91b6405cc3f6a0763cae7dd2",
           "zh-CN": "8bb60255bf9b95ac0883186d127da3510e3252a34cbefe3bc49c046a7c7bf3f5",
-          "context": "ab95dded1a672e830a75e8df31186477e2ef7406e895efb1eebf429f68f5d376"
+          "context": "43eabce0b27589d6ae6ed4dd4755c179ea0d59425206272d686a6a7fa7a84bdd"
         },
         "messages_sha256": {
           "en": "2902e1a4a6abab0e6eda1534e820f67bcd795489c499d20d63158401d6efad34",
