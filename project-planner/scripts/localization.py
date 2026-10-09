@@ -654,7 +654,9 @@ def _ensure_safe_user_locale_dir(skill_dir: str | os.PathLike[str] | None) -> tu
     return root, locale_dir
 
 
-def _check_existing_owner(path: Path, language: str) -> None:
+def _check_existing_owner(
+    path: Path, language: str, *, allow_language_change: bool = False,
+) -> None:
     """Allow a verified replacement to repair a damaged file owned by this module."""
     if path.is_symlink():
         raise LocalizationError(f"refusing to replace a symbolic link: {path}")
@@ -672,8 +674,14 @@ def _check_existing_owner(path: Path, language: str) -> None:
         existing_language = normalize_language(existing.get("language"))
     except LocalizationError as exc:
         raise LocalizationError(f"refusing to replace a locale target with unknown language ownership: {path}") from exc
-    if existing_language != language or existing.get("language") != existing_language:
+    if existing.get("language") != existing_language:
+        raise LocalizationError(f"refusing to replace a locale target with noncanonical language ownership: {path}")
+    if existing_language != language and not allow_language_change:
         raise LocalizationError(f"refusing to replace a locale target owned by another language: {path}")
+    if existing_language != language:
+        # A language switch is permitted only for an explicitly selected,
+        # valid plan snapshot. Same-language damaged-file repair remains valid.
+        validate_bundle(existing, check_current_sources=False)
 
 
 def _atomic_json_write(path: Path, value: dict[str, Any]) -> None:
@@ -736,6 +744,8 @@ def snapshot(
     messages: dict[str, Any] | str | os.PathLike[str] | None = None,
     review: dict[str, Any] | str | os.PathLike[str] | None = None,
     skill_dir: str | os.PathLike[str] | None = None,
+    *,
+    replace_language: bool = False,
 ) -> Path:
     """Atomically save a reviewed bundle for this run, or a verified candidate."""
     if (messages is None) != (review is None):
@@ -753,8 +763,11 @@ def snapshot(
     }
     if os.path.normcase(str(target)) in protected_sources:
         raise LocalizationError("snapshot output cannot replace a localization source or baseline review")
+    locale_dir = _skill_root(skill_dir) / "user-locales"
+    if target.is_relative_to(locale_dir.resolve()):
+        raise LocalizationError("snapshot output cannot replace a persistent user locale; use publish")
     if target.exists():
-        _check_existing_owner(target, code)
+        _check_existing_owner(target, code, allow_language_change=replace_language)
     _atomic_json_write(target, bundle)
     return target
 
@@ -788,6 +801,10 @@ def _build_parser() -> argparse.ArgumentParser:
     snapshot_parser.add_argument("--messages", type=Path)
     snapshot_parser.add_argument("--review", type=Path)
     snapshot_parser.add_argument("--skill-dir", type=Path)
+    snapshot_parser.add_argument(
+        "--replace-language", action="store_true",
+        help="allow an explicitly requested language switch of an existing valid plan snapshot",
+    )
     return parser
 
 
@@ -831,6 +848,7 @@ def main(argv: list[str] | None = None) -> int:
                 messages=args.messages,
                 review=args.review,
                 skill_dir=args.skill_dir,
+                replace_language=args.replace_language,
             )
             _write_json_stdout({"snapshot": str(path)})
         else:

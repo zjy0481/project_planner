@@ -431,6 +431,116 @@ class LocalizationTests(unittest.TestCase):
                 skill_dir=self.skill_dir,
             )
 
+    def test_explicit_language_switch_updates_same_plan_directory(self):
+        plan_dir = self.temp_root / "language-switch"
+        output = plan_dir / "locale-snapshot.json"
+        module_path = SCRIPTS / "localization.py"
+        prefix = [sys.executable, "-X", "utf8", str(module_path), "snapshot",
+                  "--skill-dir", str(self.skill_dir), "--output", str(output)]
+
+        def call(language, *flags):
+            return subprocess.run(prefix + ["--language", language, *flags],
+                                  cwd=ROOT, text=True, capture_output=True)
+
+        created = call("en")
+        self.assertEqual(created.returncode, 0, created.stderr)
+        original = output.read_bytes()
+        denied = call("zh-CN")
+        self.assertEqual(denied.returncode, 2)
+        self.assertEqual(output.read_bytes(), original)
+
+        raw = json.loads((ROOT / "tests" / "fixtures" / "plan.en.json").read_text(encoding="utf-8"))
+        input_path = plan_dir / "plan-input.json"
+        schedules = []
+        for language in ("en", "zh-CN", "en"):
+            switched = call(language, "--replace-language")
+            self.assertEqual(switched.returncode, 0, switched.stderr)
+            bundle = localization.validate_bundle(
+                json.loads(output.read_text(encoding="utf-8")), language=language,
+            )
+            raw["language"] = language
+            raw["localization"] = {"snapshot": output.name,
+                                   "messages_sha256": bundle["messages_sha256"]}
+            self._write_json(input_path, raw)
+            generated = subprocess.run(
+                [sys.executable, "-X", "utf8", str(SCRIPTS / "build_plan.py"),
+                 str(input_path), "--output", str(plan_dir)],
+                cwd=ROOT, text=True, capture_output=True,
+            )
+            self.assertEqual(generated.returncode, 0, generated.stderr)
+            schedule = json.loads((plan_dir / "schedule.json").read_text(encoding="utf-8"))
+            self.assertEqual(schedule["language"], language)
+            fields = ("id", "kind", "start", "finish", "duration", "depends_on", "resources", "status")
+            schedules.append([{key: item.get(key) for key in fields} for item in schedule["tasks"]])
+            for filename in ("plan.md", "gantt.svg", "gantt.html", "schedule.json"):
+                self.assertTrue((plan_dir / filename).is_file())
+        self.assertEqual(schedules[0], schedules[1])
+        self.assertEqual(schedules[0], schedules[2])
+
+    def test_language_switch_preserves_invalid_or_foreign_snapshot(self):
+        output = self.temp_root / "protected-snapshot.json"
+        valid = localization.get_bundle("en", skill_dir=self.skill_dir)
+        cases = [
+            dict(valid, generator="another-generator"),
+            dict(valid, version=2),
+            dict(valid, language="not/a/tag"),
+            dict(valid, language="EN"),
+            dict(valid, messages_sha256="0" * 64),
+        ]
+        for existing in cases:
+            with self.subTest(existing=existing.get("language"), version=existing.get("version")):
+                self._write_json(output, existing)
+                before = output.read_bytes()
+                with self.assertRaises(localization.LocalizationError):
+                    localization.snapshot("zh-CN", output, skill_dir=self.skill_dir,
+                                          replace_language=True)
+                self.assertEqual(output.read_bytes(), before)
+
+        self._write_json(output, valid)
+        before = output.read_bytes()
+        with mock.patch.object(localization.os, "replace", side_effect=PermissionError("read only")):
+            with self.assertRaisesRegex(localization.LocalizationError, "cannot atomically write"):
+                localization.snapshot("zh-CN", output, skill_dir=self.skill_dir,
+                                      replace_language=True)
+        self.assertEqual(output.read_bytes(), before)
+
+    def test_snapshot_language_switch_does_not_overwrite_persistent_bundle(self):
+        messages, review = self._candidate()
+        target = localization.publish(messages, review, "ja", skill_dir=self.skill_dir)
+        before = target.read_bytes()
+        with self.assertRaisesRegex(localization.LocalizationError, "persistent user locale"):
+            localization.snapshot("en", target, skill_dir=self.skill_dir, replace_language=True)
+        self.assertEqual(target.read_bytes(), before)
+        foreign_language = localization.make_bundle(messages, review, "fr", skill_dir=self.skill_dir)
+        self._write_json(target, foreign_language)
+        before = target.read_bytes()
+        with self.assertRaisesRegex(localization.LocalizationError, "another language"):
+            localization.publish(messages, review, "ja", skill_dir=self.skill_dir)
+        self.assertEqual(target.read_bytes(), before)
+
+    def test_snapshot_rejects_symlinks_even_with_language_switch(self):
+        target = self.temp_root / "real-snapshot.json"
+        localization.snapshot("en", target, skill_dir=self.skill_dir)
+        link = self.temp_root / "linked-snapshot.json"
+        real_symlink = True
+        try:
+            link.symlink_to(target)
+        except OSError:
+            real_symlink = False
+        before = target.read_bytes()
+        if real_symlink:
+            with self.assertRaisesRegex(localization.LocalizationError, "symbolic link"):
+                localization.snapshot("zh-CN", link, skill_dir=self.skill_dir, replace_language=True)
+        else:
+            # Windows may prohibit creating links without Developer Mode.
+            # Exercise the refusal branch without changing machine settings.
+            original = Path.is_symlink
+            with mock.patch.object(Path, "is_symlink", autospec=True,
+                                   side_effect=lambda path: path == link or original(path)):
+                with self.assertRaisesRegex(localization.LocalizationError, "symbolic link"):
+                    localization.snapshot("zh-CN", link, skill_dir=self.skill_dir, replace_language=True)
+        self.assertEqual(target.read_bytes(), before)
+
     def test_cli_sources_validate_publish_and_snapshot(self):
         messages, review = self._candidate()
         messages_path = self.temp_root / "candidate.json"
