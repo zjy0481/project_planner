@@ -27,4 +27,3 @@ Bacchelli 与 Bird 对 Microsoft 的现代审查做了探索性混合方法研�
 5. 对跨模块或多质量属性决策另开架构评估，采用场景和风险记录；把它与日常变更审查衔接，而非混成更长的 PR 清单。
 
 来源性质：Google Engineering Practices 是组织实践规范；Bacchelli–Bird 是经验研究；SEI ATAM 是架构评估方法说明。研究与方法来源均有明确适用范围，不构成任何审查方式能彻底保证质量的证据。
-

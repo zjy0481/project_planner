@@ -1,6 +1,6 @@
 # mattpocock/skills 额外 11 个技能调研
 
-调查日期：2026-10-07  
+调查日期：2026-10-07\
 固定源码：[`f3fc5632f401156837ee3872f14fe33ccf1024ea`](https://github.com/mattpocock/skills/tree/f3fc5632f401156837ee3872f14fe33ccf1024ea)
 
 ## 范围与状态
