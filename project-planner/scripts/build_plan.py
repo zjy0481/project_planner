@@ -613,7 +613,9 @@ def render_svg(schedule: dict[str, Any], *, standalone: bool = True) -> str:
             if bar_width >= 112:
                 parts.append(f'<text x="{x1+7:.2f}" y="{y+31}" font-family="Segoe UI,Arial,sans-serif" font-size="11" font-weight="600" fill="white">{esc(time_label)}</text>')
             else:
-                parts.append(f'<text x="{x2+7:.2f}" y="{y+31}" font-family="Segoe UI,Arial,sans-serif" font-size="10" fill="#334155">{esc(time_label)}</text>')
+                label_width = _text_units(time_label) * 6
+                label_x, anchor = (x1-7, 'end') if x2+7+label_width > left+plot_width else (x2+7, 'start')
+                parts.append(f'<text x="{label_x:.2f}" y="{y+31}" text-anchor="{anchor}" font-family="Segoe UI,Arial,sans-serif" font-size="10" fill="#334155">{esc(time_label)}</text>')
             positions[task['id']] = (x2, y + 27)
         for j, (key, value) in enumerate((('requirements', m['list_separator'].join(task['requirement_ids']) or m['none']),
                                         ('resources', m['list_separator'].join(task['resources']) or m['none']), ('workload', str(task['duration'])))):

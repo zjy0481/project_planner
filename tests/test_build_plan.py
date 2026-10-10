@@ -387,6 +387,28 @@ class ArtifactTests(unittest.TestCase):
         self.assertIn("整体相对终点未知", html_text)
         self.assertIn("可排程相对终点 T+1", html_text)
 
+    def test_short_bar_position_labels_stay_inside_plot(self):
+        result = schedule(plan([
+            task("base", 64),
+            task("last", 1, deps=["base"]),
+            task("middle", 1, deps=["base"]),
+            task("first", 1),
+        ]))
+        svg = ET.fromstring(build_plan.render_svg(result))
+        ns = {"s": "http://www.w3.org/2000/svg"}
+        for task_id in ("last", "middle", "first"):
+            with self.subTest(task=task_id):
+                row = svg.find(f'.//s:g[@data-task-id="{task_id}"]', ns)
+                label = next(text for text in row.findall("s:text", ns) if " → " in (text.text or ""))
+                x = float(label.attrib["x"])
+                estimated_width = len(label.text) * 6
+                if label.attrib.get("text-anchor", "start") == "end":
+                    left_edge, right_edge = x - estimated_width, x
+                else:
+                    left_edge, right_edge = x, x + estimated_width
+                self.assertGreaterEqual(left_edge, 300)
+                self.assertLessEqual(right_edge, 1060)
+
     def test_refuses_non_generated_target_and_input_collision(self):
         raw = plan([task("A")])
         result = schedule(raw)
