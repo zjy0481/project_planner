@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "language": "en",
+  "title": "Local-first todo application",
+  "summary": "Deliver an offline todo application with persistence, filters, safe JSON import, and a privacy notice.",
+  "unit": "relative work units",
+  "assumptions": [
+    "The browser supports localStorage and the File API.",
+    "T1 is the 1-unit reference. Other values are rough workload ratios including implementation, tests, review, and merge work."
+  ],
+  "risks": [
+    "This example assumes privacy review readiness at T+4. Dependent tasks still wait if the condition is unmet; this is not a calendar commitment.",
+    "Unusually large import files may affect browser responsiveness."
+  ],
+  "requirements": [
+    {"id": "R1", "text": "Create, complete, and delete todo items with local persistence.", "source": "requirements.md"},
+    {"id": "R2", "text": "Filter todo items by completion status.", "source": "requirements.md"},
+    {"id": "R3", "text": "Safely import JSON without damaging existing data on errors.", "source": "requirements.md"},
+    {"id": "R4", "text": "Provide a privacy review and an explanation of local data storage.", "source": "requirements.md"}
+  ],
+  "max_parallel": 2,
+  "tasks": [
+    {
+      "id": "T1", "title": "Define the data contract", "description": "Define the todo entity, storage version, and import format.",
+      "requirement_ids": ["R1", "R3"], "duration": 1, "depends_on": [], "resources": ["architecture"],
+      "deliverable": "Versioned data contract and examples", "acceptance": ["Fields and migration rules have tests", "Invalid-input behavior is defined"],
+      "estimate_basis": "Small contract design, unit tests, and review", "kind": "task", "external_ready": null,
+      "pr_scope": "Data types, validators, and contract tests only"
+    },
+    {
+      "id": "T2", "title": "Implement local storage", "description": "Implement creation, completion, deletion, and localStorage persistence.",
+      "requirement_ids": ["R1"], "duration": 2, "depends_on": ["T1"], "resources": ["storage-schema"],
+      "deliverable": "Local storage adapter", "acceptance": ["Data survives refresh", "Creation, completion, and deletion tests pass"],
+      "estimate_basis": "Adapter implementation, migration tests, and review", "kind": "task", "external_ready": null,
+      "pr_scope": "Storage layer and its tests, without UI"
+    },
+    {
+      "id": "T3", "title": "Build the list and filters", "description": "Use the frozen T1 contract and an in-memory mock to implement creation, completion, deletion, and three filters, making the UI PR independently reviewable and mergeable.",
+      "requirement_ids": ["R1", "R2"], "duration": 3, "depends_on": ["T1"], "resources": ["frontend-shell"],
+      "deliverable": "Interactive todo list", "acceptance": ["Creation, completion, and deletion work independently with the mock", "All three filters are correct", "Keyboard operation is available"],
+      "estimate_basis": "Components, interaction tests, accessibility checks, and review", "kind": "task", "external_ready": null,
+      "pr_scope": "List and filter UI without changing the storage contract"
+    },
+    {
+      "id": "T4", "title": "Implement JSON import", "description": "Validate the complete file before writing the data transactionally.",
+      "requirement_ids": ["R3"], "duration": 2, "depends_on": ["T2"], "resources": ["storage-schema"],
+      "deliverable": "JSON import flow", "acceptance": ["Invalid files produce clear messages", "Failures leave existing data unchanged"],
+      "estimate_basis": "File reading, validation, rollback tests, and review", "kind": "task", "external_ready": null,
+      "pr_scope": "Import service, entry point, and error handling"
+    },
+    {
+      "id": "E1", "title": "External privacy review", "description": "An external team confirms the local-data notice and browser storage usage.",
+      "requirement_ids": ["R4"], "duration": 0, "depends_on": ["T2"], "resources": [],
+      "deliverable": "Privacy review conclusion", "acceptance": ["The conclusion is recorded"],
+      "estimate_basis": "External readiness at T+4 is a scenario assumption, not a calendar promise", "kind": "external", "external_ready": 4,
+      "pr_scope": "No code PR; record the external conclusion"
+    },
+    {
+      "id": "T5", "title": "Add the privacy notice", "description": "Integrate an in-product privacy notice based on the external review.",
+      "requirement_ids": ["R4"], "duration": 1, "depends_on": ["E1", "T3"], "resources": ["frontend-shell"],
+      "deliverable": "In-product privacy notice", "acceptance": ["Copy agrees with the review conclusion", "The notice is accessible"],
+      "estimate_basis": "Copy integration, UI tests, and review", "kind": "task", "external_ready": null,
+      "pr_scope": "Privacy notice page and entry point"
+    },
+    {
+      "id": "T6", "title": "Complete end-to-end acceptance", "description": "Connect the T3 UI to the T2 real storage adapter and cover storage, filters, import, and the privacy notice.",
+      "requirement_ids": ["R1", "R2", "R3", "R4"], "duration": 1, "depends_on": ["T3", "T4", "T5"], "resources": ["release-env"],
+      "deliverable": "Integrated application and acceptance record", "acceptance": ["The UI uses real storage for creation, refresh, completion, and deletion", "All core paths pass", "No blocking defects remain"],
+      "estimate_basis": "End-to-end execution, defect verification, and review", "kind": "task", "external_ready": null,
+      "pr_scope": "UI-to-storage integration, end-to-end tests, and release checks"
+    },
+    {
+      "id": "M1", "title": "Release readiness", "description": "Release milestone after all acceptance work is complete.",
+      "requirement_ids": [], "duration": 0, "depends_on": ["T6"], "resources": [],
+      "deliverable": "Release decision", "acceptance": ["T6 is complete"],
+      "estimate_basis": "Zero-work decision gate", "kind": "milestone", "external_ready": null,
+      "pr_scope": "No independent PR"
+    }
+  ]
+}

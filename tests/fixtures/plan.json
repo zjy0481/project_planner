@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "language": "zh-CN",
   "title": "本地优先待办应用",
   "summary": "交付带持久化、筛选、JSON 导入和隐私说明的离线待办应用。",
   "unit": "相对工作单位",

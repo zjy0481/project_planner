@@ -1,0 +1,3474 @@
+{
+  "generator": "project-planner/build_plan.py",
+  "version": 1,
+  "language": "en",
+  "title": "LabFlow: independent core delivery and gated enterprise integration",
+  "summary": "Build the approved single-server Web application with relational persistence and background jobs. Deliver Stage A without external systems, then complete mandatory Stage B through mock development, protected activation and real sandbox evidence. The implementation plan is in English; the product interface remains Simplified Chinese.",
+  "unit": "relative work units",
+  "assumptions": [
+    "This is a new independent English plan authored directly from demo/labflow/requirements.md v1.1; the original Chinese requirements remain unchanged. English was explicitly requested for planning artifacts.",
+    "The fixed plan review cap is 2 full revision-and-review cycles after the mandatory initial independent review. Review status is determined by the separate review record, never by this input.",
+    "Task FIXTURE is the simple relative-work reference of 1. Other ordinary estimates of 2 or 3 are rough ratios including implementation or authored design, tests, documentation and expected review corrections. T+N denotes an abstract sequence position, not hours, days or calendar time; business deadlines and recovery targets do not convert to project duration.",
+    "Capacity is at most 3 ordinary tasks. The four exact resource locks are available at T+0 and held throughout each listed task; the formal shared environment still requires ENV delivery. Milestones and external nodes consume no capacity.",
+    "Dependencies release only after accepted, merged delivery with usable contracts. Resource conflicts do not create business dependency edges. Positive-work design tasks include review and revision; separate zero-work freeze gates approve their outputs.",
+    "Asset sandbox, documents, test token and sample assets are assumed ready at the abstract position T+6, as expressly promised by the fictional client. This is a planning scenario and no real delivery-date guarantee.",
+    "Real OIDC metadata, registered callback, client credentials and all three sandbox-account classes have unknown readiness. IDENTITY_READY has external_ready:null. Its exact descendants remain unscheduled; core and mock work and real assets have no dependency on it.",
+    "Approved architecture remains a browser frontend, /api/v1/ server, relational database and background-job process. Reviewed design chooses the concrete repository/runtime, database mechanisms, UI, OIDC checks, sync cursors and migration strategy without new service layers or speculative scope.",
+    "All implementation PRs include their own local unit/contract/transaction tests. Formal QA PRs modify test harnesses, fixtures and reports only; a failure requiring server, adapter or persistence changes returns to the owning implementation PR with backend-lead and, when its data model/integrity/migration changes, db-reviewer before revalidation.",
+    "Partial prerequisite implementations may merge behind disabled routes/capabilities until their dependent business closure arrives; they cannot advertise an incomplete rule as a usable finished capability. Frontend tasks use frozen-contract mocks; real wiring waits for the corresponding accepted backend.",
+    "Integration code, simulators and migration preparation may be developed before A. Application external-integration flags remain off until A_RELEASE; B_ACTIVATE additionally waits for restored binding-data and compatible upgrade/rollback proof. Simulators run only in detached development/test contexts before that gate.",
+    "Local/isolated-test containers are the delivery environments; no production infrastructure or ongoing duty staffing is added. Test and demo databases are separate and use the exact synthetic source fixtures with independent clock/data resets for every scenario."
+  ],
+  "risks": [
+    "Unknown real identity readiness prevents the real OIDC branch, its cross-integration acceptance and B/full release; no estimated internal task substitutes for the provider materials.",
+    "Transaction races, deadline-first convergence and outbox recipient snapshots are central correctness risks; adversarial tests must protect terminal states and partial-rollback behavior.",
+    "Identity mode switches and the last emergency administrator guard can lock out recovery if evaluated outside one transaction; no simulator or initialization recovery may bypass them.",
+    "Asset cursor failure, source-time ties and first binding can corrupt existing identity/creation-time relationships if recovery is implemented as destructive rescan; backup and restore proof precede real use.",
+    "The deterministic input-order schedule is reproducible but not globally optimal. Unscheduled B work still has rough workload estimates; the latest scheduled position is not the project completion date.",
+    "Any failed or missing explicit acceptance condition blocks its phase. Business/technical representatives must sign actual evidence, including fixed performance samples and real-provider account classes; implementers cannot waive it."
+  ],
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "text": "Enforce role unions and laboratory scope on every server read and write, with next-request permission changes, no self-approval, organization-only account/integration administration, and concurrent protection of the last enabled organization administrator and qualified emergency administrator.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-001"
+    },
+    {
+      "id": "REQ-002",
+      "text": "Deliver local accounts, protected sessions, manual temporary passwords and forced first password change, controlled initialization recovery, login throttling, immediate revocation, and atomic account deactivation that cancels valid unstarted reservations while preserving in-use records and history; keep local and enterprise authentication separate.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-002"
+    },
+    {
+      "id": "REQ-003",
+      "text": "Manage a stable device directory with unique codes, immutable laboratory and creation time, guarded ordinary disable and policy edits, retained history, explicit re-enable, and server-enforced read-only externally owned fields after asset binding.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-003"
+    },
+    {
+      "id": "REQ-004",
+      "text": "Show laboratory/device daily availability using effective reservation and maintenance occupancy, exposing only anonymous occupied intervals for other requesters and authorized details for owners and scoped managers.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-004"
+    },
+    {
+      "id": "REQ-005",
+      "text": "Create one-device reservations with a required 1-500-character purpose, server-selected requester and ID, approved or pending status as required, full time/device/qualification/occupancy validation, and no partial effects on failure.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-005"
+    },
+    {
+      "id": "REQ-006",
+      "text": "Protect reservation, rescheduling, approval, maintenance and start operations against concurrent occupancy conflicts in server and persistence transactions; twenty contenders produce exactly one winner and successful changes, audit and delivery events commit atomically.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-006"
+    },
+    {
+      "id": "REQ-007",
+      "text": "Deduplicate successful reservation creation for 24 hours by user, route, Idempotency-Key and normalized body; reject body mismatch and stale versions with 409, consume keys only on successful commits, and preserve original successful responses on replay.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-007"
+    },
+    {
+      "id": "REQ-008",
+      "text": "Allow scoped non-self approval or reasoned rejection of pending reservations before the earlier of creation plus 24 hours and planned start; expiry wins at the deadline and releases occupancy without stale tasks overwriting approval.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-008"
+    },
+    {
+      "id": "REQ-009",
+      "text": "Support owner cancellation of valid unregistered reservations until the no-show boundary, but require rescheduling and reasoned manager cancellation before planned start; reschedule atomically without changing device, revalidate everything, re-enter pending when needed, and retain converged original data on failure.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-009"
+    },
+    {
+      "id": "REQ-010",
+      "text": "Allow only the owner to register approved use in [start, start+15 minutes), rechecking device, full-interval qualification and maintenance, recording actual start and actor, and rejecting early, duplicate or unauthorized registration.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-010"
+    },
+    {
+      "id": "REQ-011",
+      "text": "Complete use manually before planned end or automatically at end; record actual or system-inferred statistical end, source and processing time, never extend occupancy or count worker delay, and emit completion exactly once under races.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-011"
+    },
+    {
+      "id": "REQ-012",
+      "text": "Converge unregistered approved reservations to no_show at start+15 minutes, release occupancy, retain history and idempotent statistics/messages, and never overwrite in_use records or punish accounts automatically.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-012"
+    },
+    {
+      "id": "REQ-013",
+      "text": "Grant or revoke scoped device qualifications covering the entire reservation interval, with at most one unrevoked unexpired grant per user/device, no direct validity edits, retained history, atomic cancellation of valid unregistered reservations on revoke, and preservation of in-use records.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-013"
+    },
+    {
+      "id": "REQ-014",
+      "text": "Create scoped positive half-hour-grid maintenance windows that may span days or closed hours, forbid overlaps with effective reservations and maintenance, allow adjacent intervals, and cancel only unended windows while retaining original intervals and releasing their remaining occupancy.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-014"
+    },
+    {
+      "id": "REQ-015",
+      "text": "Report visible-device faults with a 1-1000-character description and ordinary/emergency priority; reporting creates an open work order without disabling a device, while explicit emergency isolation atomically disables it and cancels valid unregistered reservations, preserving in-use records with stop-use messages.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-015"
+    },
+    {
+      "id": "REQ-016",
+      "text": "Implement the explicit work-order state matrix, eligible scoped handler assignment and history, immutable closed content, reasoned closure and linked recurrence, and separate audited device re-enable blocked by unresolved emergency work orders.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-016"
+    },
+    {
+      "id": "REQ-017",
+      "text": "Provide a scope-filtered manager workbench for pending approval, approved starts in [now, now+2 hours), in-use devices, unclosed work orders and future maintenance, with single-record authorized actions and safe filter/cache behavior.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-017"
+    },
+    {
+      "id": "REQ-018",
+      "text": "Persist all specified business delivery events transactionally, freeze enabled scoped manager recipients at event time, recheck account/scope at delivery, skip lost access without adding new recipients, deduplicate role unions and event/recipient/type, and preserve business success during delivery failures.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-018"
+    },
+    {
+      "id": "REQ-019",
+      "text": "Send one approved-start reminder 30 minutes before start or immediately within that window; retry delivery at 1/5/15 minutes up to three retries, support restart compensation and manual redelivery, and invalidate old-slot or already-started reminders on every delivery path.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-019"
+    },
+    {
+      "id": "REQ-020",
+      "text": "Provide owner-only paginated messages, unread filtering/counts and idempotent read actions; retain non-sensitive historical summaries while checking current target access and handling unavailable targets explicitly.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-020"
+    },
+    {
+      "id": "REQ-021",
+      "text": "Provide specified device, reservation, manager and work-order searches/filters with 100-character search limit, at most 90 local dates, UTC conversion and exclusive next-day end, default 20/max 100 pagination, stable business-time then ID ordering and preserved authorization.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-021"
+    },
+    {
+      "id": "REQ-022",
+      "text": "Report reservation outcomes and planned completed minutes by scheduled-start local date, clipped actual use from registered start to statistical end, and utilization over post-creation opening-window minutes without subtracting disable or maintenance; aggregate laboratory minutes rather than averaging percentages and handle zero denominator.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-022"
+    },
+    {
+      "id": "REQ-023",
+      "text": "Export authorized device/local-date report details as UTF-8 CSV without personal identity or purpose, with a strict 10,000-row rejection limit, safe formula-prefix text escaping, true numeric columns, correct CSV quoting and export audit.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-023"
+    },
+    {
+      "id": "REQ-024",
+      "text": "Append immutable redacted business audit within successful transactions and separate denied/invalid attempts into security logs; retain business history, audit and messages indefinitely in scope, retain security/runtime logs 30 days, and provide authorized filtered correlated audit queries.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-024"
+    },
+    {
+      "id": "REQ-025",
+      "text": "Deliver all required pages in Simplified Chinese with human-readable states and complete loading/empty/error/conflict/success feedback, safe plain-text rendering and usable 360px/1440px layouts; preserve protocol values and stable IDs.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-025"
+    },
+    {
+      "id": "REQ-026",
+      "text": "Support keyboard-only main flows, named forms with linked errors, visible non-color-only states, safe confirmation dialogs with focus entry/return and Escape/close controls, and an equivalent text list for daily availability.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-026"
+    },
+    {
+      "id": "REQ-027",
+      "text": "Design and implement OIDC contracts and a development/test-only simulator, administrator-only trustworthy stable-identity first one-to-one linking to existing enabled internal users, idempotent identical linking and conflict-safe retention; reject unlinked/disabled identities without email merging, automatic accounts/roles, unlink/rebind or enterprise-wide logout.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-027"
+    },
+    {
+      "id": "REQ-028",
+      "text": "Integrate the real OIDC provider and three real linked-enabled/linked-disabled/unlinked sandbox identities; enterprise mode revokes ordinary local sessions and always retains a enabled locally password-set org_admin emergency account, distinguishes provider outage from explicit disable, protects mode changes concurrently and preserves business/history.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-028"
+    },
+    {
+      "id": "REQ-029",
+      "text": "Design mock cursor-based asset synchronization with explicit asset-to-laboratory mapping, safe disabled/approval-required/qualification-required new devices, immutable one-to-one first bindings and externally owned code/name/location, atomic source-time ordering and per-item failures without changing local policies or creation time.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-029"
+    },
+    {
+      "id": "REQ-030",
+      "text": "Prove real asset authentication/pagination and operate one running or retry-waiting batch, daily 02:00 sync, bounded 1/5/15-minute retries, linked manual continuation and explicit confirmed invalid-checkpoint full rescan; preserve prior success and restore scheduling only after complete pagination recovery.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-030"
+    },
+    {
+      "id": "REQ-031",
+      "text": "Provide process liveness, database read/write readiness, redacted correlated logs and authorized operations views for task backlog, failed events and distinct integration states; external degradation does not fail core readiness.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-031"
+    },
+    {
+      "id": "REQ-032",
+      "text": "Meet fixed-capacity performance targets under a business/technical reviewed frozen method: 1,000 enabled users, 200 devices, 100,000 reservations, 20,000 work orders, 200,000 messages, separate 4-vCPU/8-GiB service and database, 50 sessions for ten minutes after warmup, query p95<=500ms, write p95<=800ms and unexpected server errors<1%.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-032"
+    },
+    {
+      "id": "REQ-033",
+      "text": "Back up relational data and required deployment configuration daily with protected credentials and the latest seven copies, detect failures, and prove a blank-environment recovery with <=24-hour loss and <=60-minute restoration, intact relationships/conflicts and supplementary enterprise identity-binding recovery before real use.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-033"
+    },
+    {
+      "id": "REQ-034",
+      "text": "Deliver repeatable containerized local/isolated-test deployment, secret-free examples, migrations, idempotent initialization and controlled credential recovery, health checks and proven compatible upgrade/rollback; default external flags off and enable only after Stage A acceptance with safe unavailable-external states.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-034"
+    },
+    {
+      "id": "REQ-035",
+      "text": "Deliver resettable synthetic controlled-clock unit, authorization, transaction/concurrency and main-page end-to-end evidence per phase, including every stated boundary and fixed scenario, never treating unexecuted or failing criteria as passed or mock evidence as real integration proof.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-035"
+    },
+    {
+      "id": "REQ-036",
+      "text": "Deliver user/admin/deployment manuals and phase demos with actual evidence, frozen-design and issue checklists, jointly signed by the fictional business and technical acceptance representatives; release A independently, release B only with real identity and assets, and declare full completion only after both phases.",
+      "source": "demo/labflow/requirements.md v1.1 / section 4 / REQ-036"
+    }
+  ],
+  "max_parallel": 3,
+  "scheduling": {
+    "strategy": "deterministic_topological_list_scheduling",
+    "priority": "input_order",
+    "dependency_release": "finish",
+    "resource_semantics": "exact_string_exclusive_for_task_kind",
+    "capacity_semantics": "bounded_task_kind_only",
+    "optimality": "heuristic_not_globally_optimal",
+    "makespan": 104.0
+  },
+  "tasks": [
+    {
+      "id": "FIXTURE",
+      "title": "Specify synthetic fixtures and independent reset protocol",
+      "description": "Preserve the source laboratory/user/device identities, qualification dates and clock baseline in a fixture manifest. Separate baseline, temporary-password, initialization, report and integration branches.",
+      "requirement_ids": [
+        "REQ-035",
+        "REQ-036"
+      ],
+      "duration": 1,
+      "depends_on": [],
+      "resources": [],
+      "deliverable": "Reviewed fixture manifest and reset/clock specification.",
+      "acceptance": [
+        "LAB-A/LAB-B, USR-01..06, DEV-01..03, fixed names/codes/roles, 2026-11-01T00:00:00Z device creation and 2026-11-02T00:00:00Z initial clock are recorded faithfully.",
+        "USR-07/08 are additional isolated fixtures only; baseline passwords are already set and baseline USR-05 qualifies for local emergency use.",
+        "Each of source section 5 scenarios 1..32 has a reset/clock branch and planned evidence destination; synthetic tests and demos have distinct databases."
+      ],
+      "estimate_basis": "A small static fixture/reset specification establishes the reference workload of 1. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One small documentation PR for the fixture manifest and repeatable reset protocol.",
+      "input_index": 0,
+      "status": "scheduled",
+      "start": 0.0,
+      "finish": 1.0,
+      "blocked_by": []
+    },
+    {
+      "id": "D_DATA",
+      "title": "Design relational entities and transactional integrity",
+      "description": "Choose the minimal relational design and transaction strategy for stable entities, revisions, effective half-open occupancy, credential/session state, immutable audit, deduplication and outbox. Specify deadline convergence as a system operation after authentication/scope checks and before manual rules.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-006",
+        "REQ-007",
+        "REQ-008",
+        "REQ-009",
+        "REQ-010",
+        "REQ-011",
+        "REQ-012",
+        "REQ-013",
+        "REQ-014",
+        "REQ-015",
+        "REQ-016",
+        "REQ-017",
+        "REQ-018",
+        "REQ-019",
+        "REQ-020",
+        "REQ-021",
+        "REQ-022",
+        "REQ-023",
+        "REQ-024",
+        "REQ-033",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 3,
+      "depends_on": [],
+      "resources": [
+        "backend-lead",
+        "db-reviewer"
+      ],
+      "deliverable": "Reviewed schema, migration outline, transaction/race tables and invariants.",
+      "acceptance": [
+        "All minimum fields/relationships in source section 3, immutable IDs/laboratories/creation time and 409 version conflict behavior are mapped.",
+        "Define atomic conflict protection for same-device reservations/maintenance, last organization administrator, grant uniqueness, successful idempotency keys and business/audit/outbox commits.",
+        "Convergence preserves terminal states, survives failed manual transactions, cannot authorize out-of-scope effects, and makes read/list/availability/report results logically current.",
+        "Architecture remains one server plus jobs and relational storage; review resolves necessary corrections before freeze."
+      ],
+      "estimate_basis": "About 3 reference workloads for cross-entity schema, occupancy transactions, audit/outbox invariants and race review. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One design PR for core persistence and transactional integrity; no platform-wide implementation.",
+      "input_index": 1,
+      "status": "scheduled",
+      "start": 0.0,
+      "finish": 3.0,
+      "blocked_by": []
+    },
+    {
+      "id": "D_API",
+      "title": "Design authorization, API and list contracts",
+      "description": "Specify /api/v1/ endpoints, permitted role unions, scope/error matrix, password/session states, stable list contracts and safe summaries. Select a concrete repository/runtime without adding unapproved architecture.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-007",
+        "REQ-017",
+        "REQ-020",
+        "REQ-021",
+        "REQ-022",
+        "REQ-023",
+        "REQ-024",
+        "REQ-031",
+        "REQ-035",
+        "REQ-013"
+      ],
+      "duration": 2,
+      "depends_on": [],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Reviewed route, field, error, pagination and authentication contract with mock examples.",
+      "acceptance": [
+        "401 unauthenticated, 404 foreign/sensitive out-of-scope records, 409 business/version conflicts and 422 located validation errors carry stable code/message/request correlation.",
+        "Default 20/max 100 pagination, business-time descending plus immutable ID ordering, 100-character search and inclusive-local-date/exclusive-next-day conversion up to 90 days are explicit.",
+        "No public signup, self-reset, batch approve/cancel/role-edit, new-laboratory entry, secrets in responses or name-based identity matching is introduced.",
+        "Temporary-password lifetime, ordinary/local/enterprise separation and next-request permission changes are specified for every protected endpoint.",
+        "Freeze qualification grant/revoke/read endpoints and their scoped administrator versus owner-read-only matrix, including validity inputs, current/history responses, duplicate grant conflicts, no direct validity edit and retained revocation consequences. Define authorized name editing of the two fixed laboratories within the reviewed administrator role/scope matrix; lab IDs, administrator scopes and historical device relations do not change, and no laboratory-create or device-lab-migration endpoint is added."
+      ],
+      "estimate_basis": "About 2 reference workloads for a bounded endpoint/error/scope catalog and pagination/authentication examples. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One core API/authentication contract PR with examples and reviewed scope matrix.",
+      "input_index": 2,
+      "status": "scheduled",
+      "start": 3.0,
+      "finish": 5.0,
+      "blocked_by": []
+    },
+    {
+      "id": "D_STATE",
+      "title": "Design reservation and maintenance state operations",
+      "description": "Write exact operation/state/precondition tables and transaction boundaries for reservation timing, qualifications, effective maintenance, emergency isolation and work orders.",
+      "requirement_ids": [
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-006",
+        "REQ-007",
+        "REQ-008",
+        "REQ-009",
+        "REQ-010",
+        "REQ-011",
+        "REQ-012",
+        "REQ-013",
+        "REQ-014",
+        "REQ-015",
+        "REQ-016",
+        "REQ-022",
+        "REQ-035"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "D_DATA"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Reviewed state-transition and adversarial-operation specification.",
+      "acceptance": [
+        "UTC ISO 8601 inputs, Asia/Shanghai displays, 08:00-20:00 including weekends, half-hour grid, 30-minute..8-hour same-day reservations and inclusive now+30-minute/start<=now+30*24-hour limits are explicit; end may exceed the start horizon.",
+        "Pending expiry=min(created+24h,start), approved no_show=start+15m and in_use completion=end precede applicable manual rules, including failed reschedules and management operations.",
+        "Owner cancellation differs from pre-start-only manager cancellation/rescheduling; registration uses [start,start+15m); automatic end is statistical/system-inferred, not hardware control.",
+        "Maintenance may span days/closed hours; cancellation preserves original intervals and releases only remaining occupancy. Work-order transitions, eligibility, no closed editing and unresolved-emergency re-enable barrier are fixed."
+      ],
+      "estimate_basis": "About 3 reference workloads because deadline priority and concurrent reservation/maintenance state matrices require adversarial review. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One state/invariant design PR with race tables and boundary examples.",
+      "input_index": 3,
+      "status": "scheduled",
+      "start": 5.0,
+      "finish": 8.0,
+      "blocked_by": []
+    },
+    {
+      "id": "D_NOTIFY",
+      "title": "Review complete event and reminder delivery matrix",
+      "description": "Define every listed business event, non-sensitive message summary, event-time recipients, delivery authorization and reminder/compensation state. No recipient rule is delegated to unreviewed implementation choices.",
+      "requirement_ids": [
+        "REQ-002",
+        "REQ-008",
+        "REQ-009",
+        "REQ-010",
+        "REQ-011",
+        "REQ-012",
+        "REQ-013",
+        "REQ-015",
+        "REQ-018",
+        "REQ-019",
+        "REQ-020",
+        "REQ-024",
+        "REQ-031"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "D_API",
+        "D_STATE"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Reviewed notification matrix and delivery/retry protocol.",
+      "acceptance": [
+        "Creation, approval, rejection, reschedule, cancellation, expiry, start, end, no_show, affected qualification revocation, fault and isolation events all have explicit recipients and summaries.",
+        "Event-time enabled lab_manager/org_admin scope union is frozen, applicant result and actual-user isolation recipients are included, role-union duplicates removed; deactivation/revocation retaining in_use notifies scoped managers.",
+        "Delivery skips disabled/lost-scope recipients without adding newly privileged users; skip differs from delivery failure; unique event/recipient/type is enforced.",
+        "Start reminder requires unchanged slot, approved state and now<start on automated/restart/manual paths; 1/5/15-minute retries allow exactly three retries and failed events remain actionable."
+      ],
+      "estimate_basis": "About 2 reference workloads for the complete event/recipient matrix and one coherent retry/reminder protocol. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One event/recipient/reminder contract PR including semantic review and examples.",
+      "input_index": 4,
+      "status": "scheduled",
+      "start": 8.0,
+      "finish": 10.0,
+      "blocked_by": []
+    },
+    {
+      "id": "D_UI",
+      "title": "Design Chinese pages, interactions and accessibility",
+      "description": "Specify the required Chinese page set, frozen-contract mocks, responsive forms/lists and dialog/keyboard behavior. User data stays plain text and protocol identifiers stay unchanged.",
+      "requirement_ids": [
+        "REQ-004",
+        "REQ-017",
+        "REQ-020",
+        "REQ-021",
+        "REQ-025",
+        "REQ-026",
+        "REQ-036",
+        "REQ-013"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "D_API",
+        "D_STATE",
+        "D_NOTIFY"
+      ],
+      "resources": [
+        "frontend-lead"
+      ],
+      "deliverable": "Reviewed UI flows and component/page state specification.",
+      "acceptance": [
+        "Directory/details/day view, reservation/self-list/use registration, work orders, messages, workbench, reports, audit, account and integration administration are accounted for.",
+        "Loading, empty, field failure, permission refusal, version conflict, network failure and success states are specified at 360px and 1440px.",
+        "Keyboard flow, associated labels/errors, focus-visible and non-color cues, dialog focus entry/return/Escape/close and deliberate approve/cancel confirmation are explicit; availability has an equivalent text list.",
+        "Device administration explicitly includes scoped qualification grant/revoke controls with validity intervals, current/history display, deliberate revoke confirmation, conflict/permission feedback and no direct validity edit. Owners have read-only access to their own qualifications. Include authorized name-edit controls for the two existing labs, preserving fixed IDs and providing no lab-add or device-migration control."
+      ],
+      "estimate_basis": "About 2 reference workloads for reviewed page/component state designs, using the already defined API/state contracts. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One UI specification PR with mock fixtures and review corrections.",
+      "input_index": 5,
+      "status": "scheduled",
+      "start": 10.0,
+      "finish": 12.0,
+      "blocked_by": []
+    },
+    {
+      "id": "D_OPS",
+      "title": "Design local/test deployment and safe data operations",
+      "description": "Choose container/repository deployment, migrations and compatible rollback strategy, initialization authority, protected configuration/credential references, backup retention and restore procedure for the approved environment scope.",
+      "requirement_ids": [
+        "REQ-002",
+        "REQ-024",
+        "REQ-031",
+        "REQ-033",
+        "REQ-034",
+        "REQ-036"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "D_DATA"
+      ],
+      "resources": [
+        "backend-lead",
+        "db-reviewer"
+      ],
+      "deliverable": "Reviewed deployment/migration/backup design and upgrade compatibility matrix.",
+      "acceptance": [
+        "Default external flags off; core liveness/database-write readiness and separate external degradation are defined.",
+        "Ordinary initialization is idempotent; explicit authorized expired-initial-admin reset preserves ID/audit and does not bypass enterprise emergency guards.",
+        "Daily data/config backup, protected separate credentials, latest seven copies, failure detection and blank-isolated recovery proof are specified with <=24-hour loss and <=60-minute target.",
+        "Upgrade requires verified backup and compatible schema/application versions; destructive migration is explicitly handled rather than assuming application rollback restores data. Logs retain 30 days while history/audit/messages are not auto-deleted."
+      ],
+      "estimate_basis": "About 2 reference workloads for one local/test deployment and migration/backup compatibility specification. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One deployment and data-operations design PR with reviewed migration/rollback plan.",
+      "input_index": 6,
+      "status": "scheduled",
+      "start": 10.0,
+      "finish": 12.0,
+      "blocked_by": []
+    },
+    {
+      "id": "CORE_FROZEN",
+      "title": "Approve and freeze core implementation contracts",
+      "description": "Record accepted prerequisites and the explicit internal approval state. No additional implementation is hidden in this gate.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-006",
+        "REQ-007",
+        "REQ-008",
+        "REQ-009",
+        "REQ-010",
+        "REQ-011",
+        "REQ-012",
+        "REQ-013",
+        "REQ-014",
+        "REQ-015",
+        "REQ-016",
+        "REQ-017",
+        "REQ-018",
+        "REQ-019",
+        "REQ-020",
+        "REQ-021",
+        "REQ-022",
+        "REQ-023",
+        "REQ-024",
+        "REQ-025",
+        "REQ-026",
+        "REQ-031",
+        "REQ-033",
+        "REQ-034",
+        "REQ-035",
+        "REQ-036"
+      ],
+      "duration": 0,
+      "depends_on": [
+        "D_DATA",
+        "D_API",
+        "D_STATE",
+        "D_NOTIFY",
+        "D_UI",
+        "D_OPS"
+      ],
+      "resources": [],
+      "deliverable": "Approve and freeze core implementation contracts approval record",
+      "acceptance": [
+        "All six positive-work design PRs are accepted/merged, review corrections resolved and contracts explicitly frozen; mock implementations may now use them."
+      ],
+      "estimate_basis": "Zero-work state gate; all design, validation and sign-off effort is estimated in its ordinary prerequisites.",
+      "kind": "milestone",
+      "external_ready": null,
+      "pr_scope": "No code PR; approval state only.",
+      "input_index": 7,
+      "status": "scheduled",
+      "start": 12.0,
+      "finish": 12.0,
+      "blocked_by": []
+    },
+    {
+      "id": "D_PERF",
+      "title": "Review and freeze performance acceptance method",
+      "description": "Business and technical acceptance representatives review workload mix, pacing, warmup, critical endpoint coverage, metric groups, expected-error sample rules and selected test tool before formal execution.",
+      "requirement_ids": [
+        "REQ-032",
+        "REQ-035",
+        "REQ-036"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "D_API",
+        "D_STATE"
+      ],
+      "resources": [],
+      "deliverable": "Approved reproducible A/B performance protocol and evidence templates.",
+      "acceptance": [
+        "Fix 1,000 enabled users/200 devices/100,000 historical reservations/20,000 orders/200,000 messages, separate 4-vCPU/8-GiB server and database, 50 logged-in sessions and ten-minute measured load after specified warmup.",
+        "Exclude only external interfaces and export from query/write latency thresholds: p95 query<=500ms, write<=800ms, unexpected server errors<1%; expected authorization/business conflicts are separately counted.",
+        "Critical query/write API families, samples and indexes/day-view/self-list behavior are covered; B additionally tests real integration timeout/degradation. Method changes require renewed review, preserving all fixed conditions."
+      ],
+      "estimate_basis": "About 2 reference workloads for frozen load/coverage/sample methodology and two-representative review, before running any load. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One performance-method design PR with review/signature records and sample-report schema.",
+      "input_index": 8,
+      "status": "scheduled",
+      "start": 8.0,
+      "finish": 10.0,
+      "blocked_by": []
+    },
+    {
+      "id": "PERF_FROZEN",
+      "title": "Approve frozen formal performance method",
+      "description": "Record accepted prerequisites and the explicit internal approval state. No additional implementation is hidden in this gate.",
+      "requirement_ids": [
+        "REQ-032",
+        "REQ-035",
+        "REQ-036"
+      ],
+      "duration": 0,
+      "depends_on": [
+        "D_PERF"
+      ],
+      "resources": [],
+      "deliverable": "Approve frozen formal performance method approval record",
+      "acceptance": [
+        "Business and technical representatives approve the complete method before either formal performance run."
+      ],
+      "estimate_basis": "Zero-work state gate; all design, validation and sign-off effort is estimated in its ordinary prerequisites.",
+      "kind": "milestone",
+      "external_ready": null,
+      "pr_scope": "No code PR; approval state only.",
+      "input_index": 9,
+      "status": "scheduled",
+      "start": 10.0,
+      "finish": 10.0,
+      "blocked_by": []
+    },
+    {
+      "id": "ASSET_READY",
+      "title": "Asset sandbox materials are delivered",
+      "description": "External materials supplied by the fictional client; the internal team does not estimate their production as an implementation task.",
+      "requirement_ids": [
+        "REQ-030"
+      ],
+      "duration": 0,
+      "depends_on": [],
+      "resources": [],
+      "deliverable": "Asset sandbox materials are delivered",
+      "acceptance": [
+        "Sandbox, API documents, test token and real sample assets are usable; readiness is the explicit T+6 abstract-axis assumption."
+      ],
+      "estimate_basis": "Explicit source assumption: readiness at abstract T+6, not six days or a calendar wait.",
+      "kind": "external",
+      "external_ready": 6,
+      "pr_scope": "No code PR; outside delivery event.",
+      "input_index": 10,
+      "status": "scheduled",
+      "start": 6.0,
+      "finish": 6.0,
+      "blocked_by": []
+    },
+    {
+      "id": "IDENTITY_READY",
+      "title": "Real OIDC materials and three account classes are delivered",
+      "description": "External materials supplied by the fictional client; the internal team does not estimate their production as an implementation task.",
+      "requirement_ids": [
+        "REQ-028"
+      ],
+      "duration": 0,
+      "depends_on": [],
+      "resources": [],
+      "deliverable": "Real OIDC materials and three account classes are delivered",
+      "acceptance": [
+        "Provider metadata, registered callback, protected client credentials and real linked-enabled, linked-disabled and unlinked sandbox accounts are all usable; no simulated account fills a missing class."
+      ],
+      "estimate_basis": "Unknown readiness; this event and all descendants are blocked.",
+      "kind": "external",
+      "external_ready": null,
+      "pr_scope": "No code PR; outside delivery event.",
+      "input_index": 11,
+      "status": "blocked",
+      "start": null,
+      "finish": null,
+      "blocked_by": [
+        "IDENTITY_READY"
+      ]
+    },
+    {
+      "id": "ENV",
+      "title": "Prepare isolated shared verification environment",
+      "description": "Provision repeatable local/isolated-test containers and independent test/demo data stores, controlled clock and reset entry points; reserve the sole formal QA environment.",
+      "requirement_ids": [
+        "REQ-032",
+        "REQ-033",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "D_OPS",
+        "FIXTURE"
+      ],
+      "resources": [
+        "qa-shared-env"
+      ],
+      "deliverable": "Versioned environment bootstrap and reset commands.",
+      "acceptance": [
+        "Fresh test database setup/reset works independently from the demo database; time advancement is test-only.",
+        "Configured service/database resources match the frozen hardware targets when used for performance; secrets are excluded from examples.",
+        "Formal integration, end-to-end, performance, recovery and upgrade/rollback work waits for ENV, and each holds qa-shared-env for its full interval."
+      ],
+      "estimate_basis": "About 2 reference workloads for one reproducible isolated environment, reset/clock support and hardware configuration checks. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One environment-tooling PR; no core business or persistence-model fixes.",
+      "input_index": 12,
+      "status": "scheduled",
+      "start": 12.0,
+      "finish": 14.0,
+      "blocked_by": []
+    },
+    {
+      "id": "DB_CORE",
+      "title": "Implement core migrations and invariants",
+      "description": "Implement the reviewed core schema, migrations and database integrity mechanisms; integration binding tables remain a separate B migration PR.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-006",
+        "REQ-007",
+        "REQ-008",
+        "REQ-009",
+        "REQ-010",
+        "REQ-011",
+        "REQ-012",
+        "REQ-013",
+        "REQ-014",
+        "REQ-015",
+        "REQ-016",
+        "REQ-017",
+        "REQ-018",
+        "REQ-019",
+        "REQ-020",
+        "REQ-021",
+        "REQ-022",
+        "REQ-023",
+        "REQ-024",
+        "REQ-033",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "CORE_FROZEN"
+      ],
+      "resources": [
+        "backend-lead",
+        "db-reviewer"
+      ],
+      "deliverable": "Core relational migrations and migration/invariant tests.",
+      "acceptance": [
+        "Stable entity fields, unique device codes, immutable relationships/creation time, versions, append-only audit and event/key uniqueness follow frozen design.",
+        "Effective occupancy, qualification uniqueness and last-organization-administrator protections have executable transaction mechanisms and rollback tests.",
+        "Fresh install and supported forward/compatible prior-app behavior are tested; no destructive rollback assumption is hidden."
+      ],
+      "estimate_basis": "About 3 reference workloads for the frozen core migrations and database invariants; integration associations are explicitly separate. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One persistence PR for core schema/migrations and database-level tests.",
+      "input_index": 13,
+      "status": "scheduled",
+      "start": 12.0,
+      "finish": 15.0,
+      "blocked_by": []
+    },
+    {
+      "id": "SERVER_BASE",
+      "title": "Implement server clock, protocol and transactional events",
+      "description": "Implement the minimal API skeleton, controlled server clock, error/correlation format, stable pagination and transactional audit/outbox helpers over the frozen schema.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-006",
+        "REQ-018",
+        "REQ-021",
+        "REQ-024",
+        "REQ-031",
+        "REQ-035"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "DB_CORE"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Reusable core server infrastructure with local tests.",
+      "acceptance": [
+        "All /api/v1/ failures use frozen 401/404/409/422 semantics and correlation IDs; UTC/local conversion and stable pagination are tested.",
+        "Business/audit/outbox success is all-or-nothing; denied/invalid attempts enter redacted security logs instead of successful business audit.",
+        "Outbox creation snapshots matrix-defined recipients at commit time; a later delivery failure cannot roll back a successful transaction.",
+        "Helpers are usable by downstream modules; incomplete public business routes remain unavailable."
+      ],
+      "estimate_basis": "About 3 reference workloads for the shared error/clock/pagination and atomic audit/outbox foundation without public business modules. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One server-foundation PR with unit and transaction-helper tests, no unapproved layers.",
+      "input_index": 14,
+      "status": "scheduled",
+      "start": 15.0,
+      "finish": 18.0,
+      "blocked_by": []
+    },
+    {
+      "id": "AUTH_LOCAL",
+      "title": "Implement local credentials, sessions and initialization",
+      "description": "Deliver login/logout, administrator account creation and force reset, password setting, initialization and explicit expired-initial-admin recovery. Account deactivation closure is supplied by ACCOUNT_DISABLE.",
+      "requirement_ids": [
+        "REQ-002",
+        "REQ-024",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "SERVER_BASE"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Local authentication APIs/commands and controlled-clock security tests.",
+      "acceptance": [
+        "Hash passwords irreversibly, protect Cookie sessions, revoke on logout/reset, enforce idle 30 minutes/absolute 12 hours and five failures followed by ten-minute suspension without account enumeration.",
+        "Temporary password is manually handed over, not emailed/logged/stored plaintext; pre-change sessions allow only change/logout, expire no later than issue+24h and normal session limits.",
+        "Logout/timeout do not consume valid temporary credentials; successful change/re-reset invalidates prior credentials and never resurrects old sessions.",
+        "Test separate source scenario 12 branches at issue+23h59m and exactly+24h without earlier idle/absolute expiry interference. Ordinary init twice changes no credentials/entities; authorized expired-admin recovery keeps ID/audit.",
+        "Local password state does not block future enterprise authentication; account disable is unavailable until its transactional PR is accepted."
+      ],
+      "estimate_basis": "About 3 reference workloads because protected sessions, temporary-credential boundaries and initialization recovery need focused security tests. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One local-authentication/initialization PR with safe commands, tests and security notes.",
+      "input_index": 15,
+      "status": "scheduled",
+      "start": 18.0,
+      "finish": 21.0,
+      "blocked_by": []
+    },
+    {
+      "id": "AUTH_SCOPE",
+      "title": "Implement roles, scope and organization administrator guards",
+      "description": "Enforce role unions/current lab scope across server operations and organization-only administration. Bind the core concurrent last-admin guard to account/role management.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-024",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "AUTH_LOCAL"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Authorization services and direct-API matrix tests.",
+      "acceptance": [
+        "Four roles across both labs permit/refuse expected operations; next-request changes apply without re-login, auditor writes and own approvals are refused.",
+        "Missing/foreign sensitive targets consistently return 404 after authentication; rejected writes change no business state.",
+        "Concurrent role removals/deactivations cannot leave zero enabled org_admin users; enterprise emergency-qualified protection is added in ID_MODE before B activation."
+      ],
+      "estimate_basis": "About 2 reference workloads for existing-schema role/scope enforcement and concurrent last-enabled-admin protection. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One authorization PR with direct API tests and concurrent core administrator protection.",
+      "input_index": 16,
+      "status": "scheduled",
+      "start": 21.0,
+      "finish": 23.0,
+      "blocked_by": []
+    },
+    {
+      "id": "STATE_CLOCK",
+      "title": "Implement deadline-first reservation convergence",
+      "description": "Implement internal due-state convergence and compensating jobs for pending expiry, no-show and automatic completion before dependent public actions are enabled.",
+      "requirement_ids": [
+        "REQ-008",
+        "REQ-009",
+        "REQ-010",
+        "REQ-011",
+        "REQ-012",
+        "REQ-013",
+        "REQ-015",
+        "REQ-022",
+        "REQ-035"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "SERVER_BASE",
+        "AUTH_SCOPE"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Clock-aware state engine and idempotent due-work tests.",
+      "acceptance": [
+        "At min(created+24h,start), start+15m and planned end, pending/approved/in_use become expired/no_show/completed with occupancy release and one audit/event each.",
+        "Authenticate and authorize manual targets first; failed later manual actions retain system convergence and cannot restore earlier states or overwrite terminal history.",
+        "Automatic end statistics use planned end, retaining processing time and inferred source; end+20m delay or late manual request adds no use minutes.",
+        "Read/list/availability/report convergence contract works with database fixtures; old tasks cannot overwrite in_use/next reservation or emit duplicate counts/messages."
+      ],
+      "estimate_basis": "About 3 reference workloads for the three due transitions, restart compensation and terminal-state/race guarantees. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One internal state-engine/job PR with controlled-clock and race tests; no incomplete public action routes.",
+      "input_index": 17,
+      "status": "scheduled",
+      "start": 23.0,
+      "finish": 26.0,
+      "blocked_by": []
+    },
+    {
+      "id": "DEVICE",
+      "title": "Implement device catalog and guarded lifecycle",
+      "description": "Implement scoped device create/edit/enable/ordinary disable/detail/search with immutable lab/ID/creation time and reviewed policy guards. Re-enable checks current work-order data even before order creation is exposed. Deliver authorized name editing for the two fixed laboratories against the frozen administrator scope contract, with unchanged lab IDs and existing device/history/scope relationships.",
+      "requirement_ids": [
+        "REQ-003",
+        "REQ-004",
+        "REQ-021",
+        "REQ-024",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "AUTH_SCOPE",
+        "STATE_CLOCK"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Device and fixed-laboratory-name APIs with lifecycle, stable-relationship, version and authorization tests.",
+      "acceptance": [
+        "Duplicate organization device codes conflict; device-name edits retain device ID/creation time; device laboratory reassignment and device deletion entry are absent, and bound external code/name/location edits are refused.",
+        "Ordinary disable converges deadlines then rejects pending/approved/in_use with authorized conflict details; maintenance is retained and does not itself block disable.",
+        "Approval/qualification policy changes reject effective occupying reservations but allow due terminal records after convergence. Re-enable never restores cancelled reservations and rejects unresolved emergency orders.",
+        "Requesters see enabled devices only, managers can filter disabled ones, stable Chinese/special-character search and versions follow the shared contracts.",
+        "Authorized administrators can rename either existing laboratory only within the frozen role/scope matrix. Direct unauthorized requests are refused; renaming keeps lab ID, fixed two-lab membership, administrator scope references and device/reservation/history relationships unchanged. No new-laboratory entry or device migration is introduced."
+      ],
+      "estimate_basis": "About 2 reference workloads for catalog/lifecycle operations and a small protected fixed-lab-name edit over the accepted schema and clock/state helpers; includes implementation, relationship/authorization tests, documentation and expected review corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One catalog/lifecycle and fixed-lab metadata PR over the existing reviewed schema, with local transaction and authorization tests.",
+      "input_index": 18,
+      "status": "scheduled",
+      "start": 26.0,
+      "finish": 28.0,
+      "blocked_by": []
+    },
+    {
+      "id": "QUALIFICATION",
+      "title": "Implement grants and revocation consequences",
+      "description": "Deliver scoped grant/read/revoke operations and transactional reservation effects using the frozen qualification invariants.",
+      "requirement_ids": [
+        "REQ-013",
+        "REQ-018",
+        "REQ-024",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "DEVICE",
+        "STATE_CLOCK"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Qualification APIs with race/history tests.",
+      "acceptance": [
+        "At most one unrevoked unexpired qualification per user/device; full requested interval must be covered and direct validity edit is rejected.",
+        "Revoke converges due states first, atomically cancels still-valid unregistered pending/approved reservations and releases occupancy; in_use remains and scoped managers receive handling events.",
+        "Grant/revoke audit survives history; regrant never revives terminal reservations. Revocation/approval race cannot result in an approved reservation without qualifying coverage."
+      ],
+      "estimate_basis": "About 2 reference workloads for grant/revoke, one uniqueness invariant and affected-reservation rollback/race tests. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One qualification PR including revocation transaction and local concurrent tests.",
+      "input_index": 19,
+      "status": "scheduled",
+      "start": 28.0,
+      "finish": 30.0,
+      "blocked_by": []
+    },
+    {
+      "id": "RESERVE_CREATE",
+      "title": "Implement validated occupancy and creation service",
+      "description": "Implement the internal creation service and privacy-safe daily occupancy projection over effective half-open intervals. The public create route waits for the idempotent request boundary.",
+      "requirement_ids": [
+        "REQ-004",
+        "REQ-005",
+        "REQ-006",
+        "REQ-018",
+        "REQ-035"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "DEVICE",
+        "QUALIFICATION"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Transactional reservation creation and availability services with tests.",
+      "acceptance": [
+        "Enforce source section 3 opening/day/grid/duration/start horizon and purpose 1..500, device enable, full qualification, stable server-generated requester/ID and pending versus automatic-approved status.",
+        "Twenty distinct-user same-device/same-slot contenders have one winner; different devices succeed independently and adjacent slots do not conflict.",
+        "Failed validation/conflict leaves no reservation/audit/delivery event; successful mutation commits all three.",
+        "Other requesters see only occupied times and an occupied label, never foreign requester/purpose/reservation ID; owner/scoped managers get allowed detail, maintenance and due states are reflected."
+      ],
+      "estimate_basis": "About 3 reference workloads for validated creation, effective occupancy and privacy projections; idempotent routing is separate. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One occupancy/creation-service PR with local transaction tests; public create remains gated until RESERVE_KEY.",
+      "input_index": 20,
+      "status": "scheduled",
+      "start": 30.0,
+      "finish": 33.0,
+      "blocked_by": []
+    },
+    {
+      "id": "RESERVE_KEY",
+      "title": "Expose idempotent reservation creation",
+      "description": "Add the public create route with normalized-body Idempotency-Key handling and exact first-success response retention.",
+      "requirement_ids": [
+        "REQ-005",
+        "REQ-007",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "RESERVE_CREATE"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Creation API with retry/concurrent-key tests.",
+      "acceptance": [
+        "Within 24h, same user/route/key/body replays the same ID and first successful result without revalidating successful creation; different body is 409 and different users are independent.",
+        "Only a successful commit consumes the key; corrected failed requests can retry, >24h is new work, and concurrent same-key arrivals commit once.",
+        "Network timeout replay adds no reservation, business audit or notification event; stale reservation versions remain conflict-safe."
+      ],
+      "estimate_basis": "About 2 reference workloads for a single successful-request replay boundary and concurrent-key tests. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One API-boundary PR for idempotent creation and race/replay tests.",
+      "input_index": 21,
+      "status": "scheduled",
+      "start": 33.0,
+      "finish": 35.0,
+      "blocked_by": []
+    },
+    {
+      "id": "RESERVE_ACTIONS",
+      "title": "Implement approval, cancellation and atomic rescheduling",
+      "description": "Deliver scoped reasoned approval/rejection and owner/manager cancellation/rescheduling endpoints after due-state convergence.",
+      "requirement_ids": [
+        "REQ-006",
+        "REQ-007",
+        "REQ-008",
+        "REQ-009",
+        "REQ-013",
+        "REQ-018",
+        "REQ-035"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "RESERVE_KEY"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Reservation action APIs with state/race/rollback tests.",
+      "acceptance": [
+        "Approval rejects self, wrong scope, expiry/deadline, disabled device or insufficient qualification; rejection needs a reason and releases occupancy. Approval versus due-worker resolves once without stale override.",
+        "Owner cancellation at start+5m while still approved succeeds; manager ordinary cancellation and owner rescheduling at/after start fail, regardless of valid target slot; at start+15m terminal no_show wins.",
+        "Reschedule keeps device, validates a fresh request, returns pending/recalculates expiry when approval required, atomically releases old slot only on success and preserves converged original state/version on failure.",
+        "Competing reschedules/maintenance cannot double-book; successful changes increment version and produce exactly one result event, stale requests return 409."
+      ],
+      "estimate_basis": "About 3 reference workloads for approval/cancel/reschedule state and deadline semantics with atomic replacement-slot races. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One reservation-action PR with local concurrency and precise deadline tests.",
+      "input_index": 22,
+      "status": "scheduled",
+      "start": 35.0,
+      "finish": 38.0,
+      "blocked_by": []
+    },
+    {
+      "id": "RESERVE_USE",
+      "title": "Implement owner registration and use completion",
+      "description": "Expose owner-only use-start and manual completion over the clock state engine, with viewable planned/actual/statistical timestamps.",
+      "requirement_ids": [
+        "REQ-010",
+        "REQ-011",
+        "REQ-012",
+        "REQ-018",
+        "REQ-022",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "RESERVE_ACTIONS"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Use-operation APIs and clock/race tests.",
+      "acceptance": [
+        "Register approved use exactly at start but not at start+15m; owner-only, no early/repeated start, and enabled device/full qualification/no exclusive maintenance are rechecked atomically.",
+        "Manual end before end accepts 0..500-character notes and uses server time; at/after end first converges automatic completion without overwriting planned statistical end/source/processing time.",
+        "Manual/automatic race emits one completion and preserves history; next adjacent reservation registers at end without waiting for prior user action. No fee, hardware-stop or measured-hardware claim is added."
+      ],
+      "estimate_basis": "About 2 reference workloads for owner start/end APIs using the accepted due-state engine, including one-completion races. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One reservation-use PR with local event/race tests and detail fields.",
+      "input_index": 23,
+      "status": "scheduled",
+      "start": 38.0,
+      "finish": 40.0,
+      "blocked_by": []
+    },
+    {
+      "id": "MAINTENANCE",
+      "title": "Implement maintenance conflicts and remaining-interval cancellation",
+      "description": "Deliver scoped maintenance create/view/cancel with immutable original intervals and effective remaining occupancy.",
+      "requirement_ids": [
+        "REQ-006",
+        "REQ-014",
+        "REQ-018",
+        "REQ-024",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "DEVICE",
+        "RESERVE_CREATE"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Maintenance APIs with interval and transaction tests.",
+      "acceptance": [
+        "Positive half-hour-grid windows start no earlier than now, may span closed hours/days and exceed reservation 30-day horizon.",
+        "Reservation/maintenance and maintenance/maintenance overlap rejects atomically; adjacent half-open intervals succeed and authorized conflicts are shown without silently cancelling reservations.",
+        "Before end cancellation uses current non-rounded server time, preserves original start/end/reason/audit and frees only remainder; ended cancellation fails, disabled devices stay disabled and new reservations still obey lead/grid rules."
+      ],
+      "estimate_basis": "About 2 reference workloads for create/cancel effective maintenance intervals over the established occupancy mechanism. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One maintenance PR with local concurrent interval/cancellation tests.",
+      "input_index": 24,
+      "status": "scheduled",
+      "start": 40.0,
+      "finish": 42.0,
+      "blocked_by": []
+    },
+    {
+      "id": "WORK_ORDERS",
+      "title": "Implement reporting, handler history and explicit workflow",
+      "description": "Implement visible-device fault report and scoped work-order actions, linked recurrence and current handler authorization; reporting never isolates automatically.",
+      "requirement_ids": [
+        "REQ-015",
+        "REQ-016",
+        "REQ-017",
+        "REQ-018",
+        "REQ-024",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "DEVICE",
+        "AUTH_SCOPE"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Work-order APIs and full transition-matrix tests.",
+      "acceptance": [
+        "Report requires 1..1000-character description and ordinary/emergency priority, creates open order and manager event without attachment or auto-disable.",
+        "Permit open->in_progress, open/in_progress->resolved, resolved->closed or in_progress; closed cannot reopen/edit, recurrence creates linked new order and closure requires summary.",
+        "Handler must currently be enabled scoped lab_manager/org_admin; changed/deactivated handlers lose action access without losing assignment history and valid same-scope managers can reassign.",
+        "Reporter sees own status/non-internal summary. Open/in_progress emergency orders block separate audited re-enable; ordinary orders do not, resolution/closure never enables automatically."
+      ],
+      "estimate_basis": "About 2 reference workloads for one explicit state/assignment-history workflow; emergency isolation is split out. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One fault/work-order workflow PR with state, version and handler-authorization tests.",
+      "input_index": 25,
+      "status": "scheduled",
+      "start": 42.0,
+      "finish": 44.0,
+      "blocked_by": []
+    },
+    {
+      "id": "ISOLATION",
+      "title": "Implement atomic emergency isolation",
+      "description": "Deliver explicit emergency-isolation operation as the documented exception to ordinary disable, over converged reservation states.",
+      "requirement_ids": [
+        "REQ-003",
+        "REQ-006",
+        "REQ-015",
+        "REQ-016",
+        "REQ-018",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "RESERVE_USE",
+        "WORK_ORDERS",
+        "MAINTENANCE"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Isolation API and rollback/recipient tests.",
+      "acceptance": [
+        "One transaction disables the device, cancels valid unregistered pending/approved records and releases occupancy; due no_show/completed states are retained.",
+        "In_use records remain with actual-user stop-use and scoped-manager notices; no physical hardware shutdown is asserted.",
+        "Injected transaction failure preserves all original device/reservation state; all histories remain and re-enable still obeys independent emergency-order barrier."
+      ],
+      "estimate_basis": "About 2 reference workloads for one multi-record atomic operation and rollback/recipient verification. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One isolation PR with local failure injection and due-state tests.",
+      "input_index": 26,
+      "status": "scheduled",
+      "start": 44.0,
+      "finish": 46.0,
+      "blocked_by": []
+    },
+    {
+      "id": "ACCOUNT_DISABLE",
+      "title": "Close transactional account deactivation",
+      "description": "Enable account deactivation only when its session, reservation and handler consequences can commit together.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-018",
+        "REQ-024",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "RESERVE_USE",
+        "WORK_ORDERS",
+        "AUTH_SCOPE"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Deactivation/reactivation APIs with atomicity tests.",
+      "acceptance": [
+        "After due convergence, atomically deactivate/revoke all sessions/cancel valid unregistered pending/approved reservations, releasing their occupancy.",
+        "Retain in_use/history/qualifications/work orders, notify scope managers, deny inactive historical handlers and allow current eligible reassignment.",
+        "Failure injection leaves no partial deactivation. Reactivation restores neither cancelled bookings nor old sessions; existing use still ends at its deadline.",
+        "Unique enabled-org-admin guard holds concurrently; ID_MODE must additionally protect the last qualified emergency administrator before enterprise activation."
+      ],
+      "estimate_basis": "About 2 reference workloads for one account/session/reservation closure over accepted authentication and booking modules. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One account-lifecycle closure PR with source scenario 13 and concurrent core guard tests.",
+      "input_index": 27,
+      "status": "scheduled",
+      "start": 46.0,
+      "finish": 48.0,
+      "blocked_by": []
+    },
+    {
+      "id": "MESSAGE_DELIVERY",
+      "title": "Implement durable authorized message delivery",
+      "description": "Consume frozen-recipient outbox events into owner messages with delivery-time account/scope rechecks and idempotent read APIs.",
+      "requirement_ids": [
+        "REQ-018",
+        "REQ-020",
+        "REQ-024",
+        "REQ-031",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "AUTH_SCOPE",
+        "SERVER_BASE"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Delivery worker, message APIs and recipient/race tests.",
+      "acceptance": [
+        "Unique event/recipient/type prevents duplicate messages across worker/manual consumers; role unions do not duplicate a recipient.",
+        "Old managers losing scope are skipped with evidence, new managers are not appended, other originally eligible managers deliver normally and pure auditor status creates no business notification.",
+        "Delivery failures preserve committed business state; unread filtering/counts and single/all read actions are owner-only/idempotent.",
+        "Historical summaries remain non-sensitive, target clicks recheck current access and missing targets are explicit."
+      ],
+      "estimate_basis": "About 2 reference workloads for outbox consumption, delivery-time authorization and owner-message/read APIs. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One message-delivery and owner-message API PR with local worker/permission tests.",
+      "input_index": 28,
+      "status": "scheduled",
+      "start": 48.0,
+      "finish": 50.0,
+      "blocked_by": []
+    },
+    {
+      "id": "REMINDERS",
+      "title": "Implement bounded retries and stale-reminder compensation",
+      "description": "Add start reminder scheduling, bounded retry, restart compensation and manual event redelivery with one eligibility predicate.",
+      "requirement_ids": [
+        "REQ-019",
+        "REQ-031",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "MESSAGE_DELIVERY",
+        "RESERVE_ACTIONS",
+        "RESERVE_USE"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Reminder/retry jobs and failure-injection tests.",
+      "acceptance": [
+        "Approved reminder schedules once at start-30m or immediately within window; approval after start is refused.",
+        "Retry delays are exactly 1/5/15 minutes with three retries maximum, then pending handling; multiple workers/manual retry remain duplicate-safe and event correlation is preserved.",
+        "Every automatic/restart/manual delivery requires approved, same slot and now<start plus recipient authorization; cancel/reschedule/registration/start/terminal state invalidates old undelivered reminders.",
+        "Reapproved new slot gets one new reminder; old delivered history persists and current permissions still govern target access."
+      ],
+      "estimate_basis": "About 2 reference workloads for the shared reminder eligibility predicate, three retries and restart/manual fault cases. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One reminder-compensation PR with controlled-clock restart/manual redelivery tests.",
+      "input_index": 29,
+      "status": "scheduled",
+      "start": 50.0,
+      "finish": 52.0,
+      "blocked_by": []
+    },
+    {
+      "id": "QUERY_WORKBENCH",
+      "title": "Implement scoped lists and manager workbench",
+      "description": "Complete real list/detail/filter projections for users and managers with stable pagination and safe availability privacy.",
+      "requirement_ids": [
+        "REQ-004",
+        "REQ-017",
+        "REQ-020",
+        "REQ-021",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "RESERVE_USE",
+        "MAINTENANCE",
+        "WORK_ORDERS",
+        "MESSAGE_DELIVERY"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Read APIs and scope/filter/page tests.",
+      "acceptance": [
+        "Device name/code, self reservation status/device/date and manager/order lab/status/priority filters enforce 100-character search and <=90 local-day conversion.",
+        "Default 20/max100 pages sort business time descending then ID; same data version has no missing/duplicate rows and every page retains authorization.",
+        "Workbench contains pending, approved starts in [now,now+2h), in_use, unclosed orders and future maintenance; org_admin lab filter never expands a lab_manager scope.",
+        "Due-state reads and privacy projections match server state; no bulk action endpoints are added."
+      ],
+      "estimate_basis": "About 2 reference workloads for accepted-entity projections and stable scoped filtering rather than new business state. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One scoped-query/workbench PR over accepted business modules with local API tests.",
+      "input_index": 30,
+      "status": "scheduled",
+      "start": 52.0,
+      "finish": 54.0,
+      "blocked_by": []
+    },
+    {
+      "id": "REPORTS",
+      "title": "Implement state-aware weighted utilization reports",
+      "description": "Implement scoped and auditor-read-only aggregation using logical due states, clipped actual use and post-device-creation open-window denominators.",
+      "requirement_ids": [
+        "REQ-022",
+        "REQ-032",
+        "REQ-035"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "RESERVE_USE",
+        "DEVICE",
+        "QUERY_WORKBENCH"
+      ],
+      "resources": [
+        "backend-lead",
+        "db-reviewer"
+      ],
+      "deliverable": "Report APIs, reviewed query indexes and deterministic arithmetic tests.",
+      "acceptance": [
+        "Counts use scheduled-start local date; planned minutes include only completed planned intervals, actual minutes use registered start/statistical end clipped to boundaries, excluding worker delay and no_show.",
+        "The denominator is the intersection of the report range, daily opening windows and time on or after immutable device creation. A report range entirely before creation has zero denominator and no-computable-data; creation within a day clips that day at creation. Creation before a later report range does not zero its opening-window denominator. Disable and maintenance never subtract denominator.",
+        "Source scenario 23 yields DEV-03 40/720, DEV-LATE 30/600, LAB-B 70/1320 and 120 completed planned minutes, not averaged percentages.",
+        "Time zone/metric explanation is returned, rename/sync preserves historical attribution and creation time; indexes/pagination cover large day-view/self-list queries."
+      ],
+      "estimate_basis": "About 3 reference workloads for clipped weighted aggregation, immutable creation-time denominators and reviewed query-index migrations. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One reporting/query-index migration PR on reviewed schema, with db-reviewer covering index/migration changes.",
+      "input_index": 31,
+      "status": "scheduled",
+      "start": 54.0,
+      "finish": 57.0,
+      "blocked_by": []
+    },
+    {
+      "id": "CSV",
+      "title": "Implement safe scoped report export",
+      "description": "Expose audited UTF-8 CSV device/local-date aggregates using the same report filters/scope and bounded output.",
+      "requirement_ids": [
+        "REQ-023",
+        "REQ-024",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "REPORTS"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Export API and CSV safety/permission tests.",
+      "acceptance": [
+        "Managers/auditors only; no requester identity or purpose fields. >10,000 rows rejects with smaller-range guidance instead of truncation.",
+        "Text starting =,+,-,@ is safely escaped, true numeric values remain numeric and quotes/commas/newlines follow CSV format.",
+        "Column names/time zone/statistical meanings are explicit; output row count matches filtered UI result and export audit correlates the request."
+      ],
+      "estimate_basis": "About 2 reference workloads for one bounded audited export endpoint and formula/CSV authorization edge cases. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One report-export PR with local formula/text edge-case and authorization tests.",
+      "input_index": 32,
+      "status": "scheduled",
+      "start": 57.0,
+      "finish": 59.0,
+      "blocked_by": []
+    },
+    {
+      "id": "AUDIT_OPS",
+      "title": "Implement audit queries, health and core operations",
+      "description": "Deliver authorized audit filters, process/database checks, correlated redacted logging and core backlog/failure operations queries.",
+      "requirement_ids": [
+        "REQ-024",
+        "REQ-031",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "QUERY_WORKBENCH",
+        "REMINDERS",
+        "ACCOUNT_DISABLE",
+        "CSV"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Audit/health/operations APIs and retention tests.",
+      "acceptance": [
+        "Audit filters date/action/actor enforce org_admin/auditor scope; no business edit/delete APIs. Passwords/tokens/external credential values never enter logs/summaries.",
+        "Business history/audit/messages are never auto-deleted; security/runtime logs age out after 30 days only.",
+        "Database read/write outage fails readiness and recovery passes; liveness is distinct and external failure cannot fail core readiness.",
+        "Authorized operations show pending/failed delivery events and correlation IDs; unauthenticated/out-of-role access is rejected."
+      ],
+      "estimate_basis": "About 2 reference workloads for append-only audit reads, core health/operations and targeted redaction/retention tests. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One audit/core-operations PR with local fault/retention tests; B integration state additions are separate.",
+      "input_index": 33,
+      "status": "scheduled",
+      "start": 59.0,
+      "finish": 61.0,
+      "blocked_by": []
+    },
+    {
+      "id": "DEPLOY_A",
+      "title": "Package repeatable core deployment and migration commands",
+      "description": "Package accepted core APIs/jobs with local/test containers, secret-free variables, migrations, health verification, initialization and explicit credential-recovery procedures.",
+      "requirement_ids": [
+        "REQ-002",
+        "REQ-031",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "AUTH_LOCAL",
+        "AUDIT_OPS",
+        "ENV"
+      ],
+      "resources": [
+        "backend-lead",
+        "db-reviewer"
+      ],
+      "deliverable": "Reproducible core deployment commands and smoke tests.",
+      "acceptance": [
+        "Fresh environment boots with external flags off; source scope excludes production infrastructure and continuous on-call.",
+        "Two ordinary initializations add no duplicate roles/devices and reset no existing credentials; explicit authorized admin recovery preserves ID/audit.",
+        "Migration/application compatibility and verified-backup prerequisites are documented; downgrade cannot claim to recover destructive data by itself."
+      ],
+      "estimate_basis": "About 2 reference workloads for packaging accepted server modules and reviewed migrations into one repeatable deployment. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One deployment/migration-packaging PR with migration review and local smoke tests.",
+      "input_index": 34,
+      "status": "scheduled",
+      "start": 61.0,
+      "finish": 63.0,
+      "blocked_by": []
+    },
+    {
+      "id": "BACKUP",
+      "title": "Implement protected backups, retention and recovery commands",
+      "description": "Build data/config backup and restore tooling, daily scheduling and failure discovery without changing application server or schema.",
+      "requirement_ids": [
+        "REQ-024",
+        "REQ-033",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "DEPLOY_A"
+      ],
+      "resources": [],
+      "deliverable": "Backup/restore scripts and protected configuration examples.",
+      "acceptance": [
+        "Latest seven backups retained independently of 30-day logs; credentials protected separately and no usable secrets in samples.",
+        "Manual blank-environment restore and failure-discovery steps are executable; manifests expose source time/coverage for <=24h loss proof.",
+        "Tool tests use synthetic data and never delete business/audit/message history as retention cleanup."
+      ],
+      "estimate_basis": "About 2 reference workloads for protected backup/retention/restore tooling; actual formal recovery is separately estimated. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One operations-script PR; no server/model changes and no formal recovery result claimed yet.",
+      "input_index": 35,
+      "status": "scheduled",
+      "start": 63.0,
+      "finish": 65.0,
+      "blocked_by": []
+    },
+    {
+      "id": "UI_BASE",
+      "title": "Implement Chinese feedback and keyboard primitives",
+      "description": "Implement the approved minimal browser shell, Chinese status labels, escaped text display, form error associations and safe dialog focus controls.",
+      "requirement_ids": [
+        "REQ-025",
+        "REQ-026"
+      ],
+      "duration": 1,
+      "depends_on": [
+        "CORE_FROZEN"
+      ],
+      "resources": [
+        "frontend-lead"
+      ],
+      "deliverable": "Reusable UI primitives and component tests.",
+      "acceptance": [
+        "Protocol values/IDs remain stable while visible labels use Simplified Chinese; user strings are plain text.",
+        "Named fields/linkable errors, visible focus/non-color statuses and dialogs with focus entry/return/Escape/explicit close work without accidental background confirmation.",
+        "Component examples cover loading/empty/error/conflict/success at narrow/wide widths."
+      ],
+      "estimate_basis": "About 1 reference workload for a small set of reviewed text/form/dialog primitives without complete business pages. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One small frontend primitives PR; downstream page PRs use frozen mocks.",
+      "input_index": 36,
+      "status": "scheduled",
+      "start": 12.0,
+      "finish": 13.0,
+      "blocked_by": []
+    },
+    {
+      "id": "UI_ACCOUNTS",
+      "title": "Implement local login and scoped account administration pages",
+      "description": "Build login/logout, restricted password-change and organization account/role/scope views with frozen mocks.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-025",
+        "REQ-026"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "UI_BASE"
+      ],
+      "resources": [
+        "frontend-lead"
+      ],
+      "deliverable": "Chinese authentication/account pages and component tests.",
+      "acceptance": [
+        "Restricted login exposes only password-change/logout, session errors and expiration feedback; no public signup/self-reset appears.",
+        "Org-only account create/reset/deactivate/role/scope controls show conflict/forbidden feedback without replacing server authorization.",
+        "Long names, keyboard forms/dialogs and 360px/1440px layouts are usable."
+      ],
+      "estimate_basis": "About 2 reference workloads for account and restricted-local-auth pages using the shared primitives and mock contracts. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One frontend account/authentication PR against frozen mocks; real API wiring comes later.",
+      "input_index": 37,
+      "status": "scheduled",
+      "start": 13.0,
+      "finish": 15.0,
+      "blocked_by": []
+    },
+    {
+      "id": "UI_DIRECTORY",
+      "title": "Implement device directory and accessible daily availability",
+      "description": "Build search/filter directory, details, scoped device administration and daily intervals with privacy-safe mock projections. Include scoped administrator qualification grant/revoke and fixed-laboratory-name editing within device administration, against the frozen mock API.",
+      "requirement_ids": [
+        "REQ-003",
+        "REQ-004",
+        "REQ-021",
+        "REQ-025",
+        "REQ-026",
+        "REQ-013"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "UI_BASE"
+      ],
+      "resources": [
+        "frontend-lead"
+      ],
+      "deliverable": "Chinese device/day-view, scoped qualification-management and fixed-lab-name controls with responsive keyboard/component tests.",
+      "acceptance": [
+        "Unknown/disabled/bound read-only and policy/version conflicts are explicit; no delete/lab-migration entry is provided.",
+        "Foreign occupied intervals reveal no identity/purpose/ID; day chart has equivalent keyboard-readable text list and adjacent boundaries display correctly.",
+        "Search/page/filter changes clear stale-scope cache and preserve safe plain-text long Chinese labels at 360px/1440px.",
+        "Eligible scoped administrators can grant with explicit validity interval, inspect current and historical qualification, and deliberately revoke with occupancy/in-use consequence feedback; scope denial, duplicate grant and version conflicts are shown. There is no direct validity editing, and revoke/regrant never implies cancelled reservations revive. Owner qualification display remains read-only and limited to the owner.",
+        "Authorized administrators can edit names of the two fixed labs with explicit success/validation/permission/conflict states. Labels refresh while stable lab IDs, scope selections, device ownership and historical links persist; no lab creation or device migration control is offered."
+      ],
+      "estimate_basis": "About 3 reference workloads for catalog/detail/day-view plus bounded qualification grant/revoke/history and fixed-lab-name controls sharing the same administrator page and accepted mock contracts; includes implementation, responsive/keyboard/error tests, documentation and expected review corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One coherent device-administration/day-view frontend PR with qualification and fixed-lab-name controls against frozen mocks; no new standalone page or backend fixes.",
+      "input_index": 38,
+      "status": "scheduled",
+      "start": 15.0,
+      "finish": 18.0,
+      "blocked_by": []
+    },
+    {
+      "id": "UI_RESERVATIONS",
+      "title": "Implement booking, self-list and use actions",
+      "description": "Build reservation form, self-list/details, qualification display and owner action dialogs using frozen mock states.",
+      "requirement_ids": [
+        "REQ-005",
+        "REQ-007",
+        "REQ-008",
+        "REQ-009",
+        "REQ-010",
+        "REQ-011",
+        "REQ-012",
+        "REQ-013",
+        "REQ-021",
+        "REQ-025",
+        "REQ-026"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "UI_BASE",
+        "UI_DIRECTORY"
+      ],
+      "resources": [
+        "frontend-lead"
+      ],
+      "deliverable": "Chinese booking/use pages and boundary component tests.",
+      "acceptance": [
+        "Form explains time/grid/qualification limits with field errors and does not treat displayed availability as success guarantee.",
+        "Human-readable pending/approved/in_use/completed/rejected/cancelled/expired/no_show states and version conflicts preserve unsaved intent safely.",
+        "Owner cancellation versus pre-start reschedule, start/end eligibility and planned/actual/statistical/source/processing fields are visible without claiming hardware measurement.",
+        "Keyboard-only booking/cancel can complete; script/special-character purpose is plain text and long labels wrap."
+      ],
+      "estimate_basis": "About 3 reference workloads for booking/self-list/use dialogs and many visible status/deadline/error boundaries. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One frontend reservation/use-flow PR against mocks with accessible forms/dialogs.",
+      "input_index": 39,
+      "status": "scheduled",
+      "start": 18.0,
+      "finish": 21.0,
+      "blocked_by": []
+    },
+    {
+      "id": "UI_MAINTENANCE",
+      "title": "Implement manager workbench, maintenance and work orders",
+      "description": "Build scope-filtered workbench and single-record approval/rejection/cancellation, maintenance, fault/isolation and handler workflow pages using mocks.",
+      "requirement_ids": [
+        "REQ-008",
+        "REQ-014",
+        "REQ-015",
+        "REQ-016",
+        "REQ-017",
+        "REQ-025",
+        "REQ-026"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "UI_BASE"
+      ],
+      "resources": [
+        "frontend-lead"
+      ],
+      "deliverable": "Chinese management/maintenance/work-order pages.",
+      "acceptance": [
+        "No bulk approval/cancellation/role edits; range changes clear cached data and show empty/network failures.",
+        "Maintenance original/cancel intervals, conflict lists, handler-history/current-access, transition refusals and unresolved emergency re-enable barriers are explicit.",
+        "Fault report does not imply disable; deliberate isolation confirmation explains retained in_use and software-only stop-use messages, not physical hardware shutdown.",
+        "Keyboard approval workflow and safe focus confirmation meet narrow/wide layouts."
+      ],
+      "estimate_basis": "About 3 reference workloads for the coupled manager workbench and maintenance/work-order single-record workflows. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One frontend scoped-management PR against mock contracts.",
+      "input_index": 40,
+      "status": "scheduled",
+      "start": 21.0,
+      "finish": 24.0,
+      "blocked_by": []
+    },
+    {
+      "id": "UI_MESSAGES",
+      "title": "Implement accessible owner message center",
+      "description": "Build paginated owner messages, unread/read controls, retry-result summaries and target navigation states against mocks.",
+      "requirement_ids": [
+        "REQ-018",
+        "REQ-019",
+        "REQ-020",
+        "REQ-025",
+        "REQ-026"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "UI_BASE"
+      ],
+      "resources": [
+        "frontend-lead"
+      ],
+      "deliverable": "Chinese message page and component tests.",
+      "acceptance": [
+        "Unread count/list consistent, repeated marking safe, historical delivered summaries retain plain-text content.",
+        "No-access/missing targets are explicit and cannot reveal protected detail; keyboard reading/marking is possible.",
+        "Loading/empty/permission/network/success states and special text wrap at 360px/1440px."
+      ],
+      "estimate_basis": "About 2 reference workloads for one owner-message area with paging/read/target-access state tests. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One frontend message-center PR against mocks.",
+      "input_index": 41,
+      "status": "scheduled",
+      "start": 24.0,
+      "finish": 26.0,
+      "blocked_by": []
+    },
+    {
+      "id": "UI_REPORTS_OPS",
+      "title": "Implement reports, audit and core operations pages",
+      "description": "Build report/export, filtered audit and authorized core operations views against frozen mocks.",
+      "requirement_ids": [
+        "REQ-022",
+        "REQ-023",
+        "REQ-024",
+        "REQ-025",
+        "REQ-026",
+        "REQ-031"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "UI_BASE"
+      ],
+      "resources": [
+        "frontend-lead"
+      ],
+      "deliverable": "Chinese report/audit/operations pages and component tests.",
+      "acceptance": [
+        "Display time zone/metric meaning, weighted minutes and no-computable-data; export oversized/conflict/permission errors are visible.",
+        "Audit read-only and redacted, tasks backlog/failed messages/DB readiness clearly separate; no credential values displayed.",
+        "Keyboard accessible filters/dialogs, all page states and responsive escaped long text are covered."
+      ],
+      "estimate_basis": "About 3 reference workloads for report/export, audit and core-operations views sharing reviewed query contracts. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One frontend reports/audit/core-operations PR against mocks.",
+      "input_index": 42,
+      "status": "scheduled",
+      "start": 26.0,
+      "finish": 29.0,
+      "blocked_by": []
+    },
+    {
+      "id": "WIRE_A",
+      "title": "Connect core frontend to accepted real APIs",
+      "description": "Replace core page mock adapters with the corresponding accepted real APIs, retaining test mocks only in development/test fixtures.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-006",
+        "REQ-007",
+        "REQ-008",
+        "REQ-009",
+        "REQ-010",
+        "REQ-011",
+        "REQ-012",
+        "REQ-013",
+        "REQ-014",
+        "REQ-015",
+        "REQ-016",
+        "REQ-017",
+        "REQ-018",
+        "REQ-019",
+        "REQ-020",
+        "REQ-021",
+        "REQ-022",
+        "REQ-023",
+        "REQ-024",
+        "REQ-025",
+        "REQ-026",
+        "REQ-031",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "UI_ACCOUNTS",
+        "UI_DIRECTORY",
+        "UI_RESERVATIONS",
+        "UI_MAINTENANCE",
+        "UI_MESSAGES",
+        "UI_REPORTS_OPS",
+        "ISOLATION",
+        "AUDIT_OPS",
+        "DEPLOY_A"
+      ],
+      "resources": [
+        "frontend-lead"
+      ],
+      "deliverable": "Real core UI wiring and frontend contract tests.",
+      "acceptance": [
+        "All required A pages/actions use real server authentication, scope, errors/versions and safe cache invalidation; direct API guards remain authoritative.",
+        "Idempotent create retains a retry key/body across network uncertainty; current data refreshes after accepted mutation/conflict.",
+        "All integrations disabled still supports complete core flow; no production mock login route exists.",
+        "This PR modifies frontend integration only; server/model defects return to their locked owning task before formal QA.",
+        "Wire administrator qualification grant/revoke/current/history and fixed-lab-name edits to the accepted QUALIFICATION and DEVICE APIs; retain exact lab/user/device identifiers, owner read-only projection, deliberate revoke confirmation and denied/conflict feedback, and refresh affected names/qualification/availability only after accepted changes."
+      ],
+      "estimate_basis": "About 2 reference workloads for replacing approved page adapters with real core APIs; implementation repairs are excluded. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One frontend integration PR; no backend/persistence fixes concealed in wiring.",
+      "input_index": 43,
+      "status": "scheduled",
+      "start": 63.0,
+      "finish": 65.0,
+      "blocked_by": []
+    },
+    {
+      "id": "QA_AUTH_A",
+      "title": "Verify A authentication and account lifecycle",
+      "description": "Run direct-API role/scope and session tests plus keyboard account flows in the shared environment.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-024",
+        "REQ-025",
+        "REQ-026",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "WIRE_A",
+        "FIXTURE",
+        "ENV"
+      ],
+      "resources": [
+        "qa-shared-env"
+      ],
+      "deliverable": "Verify A authentication and account lifecycle reproducible tests and actual result report.",
+      "acceptance": [
+        "Execute source scenarios 12-14 core branches: temporary-password logout/relogin/24h/re-reset, initialization same-ID recovery, atomic deactivation with pending/approved/in_use and concurrent last enabled org_admin.",
+        "Verify local hash/cookie/throttling/idle/absolute limits, no secrets, next-request permission changes, unauthorized writes preserve state and no self-approval across both laboratories.",
+        "A results do not depend on any real identity material.",
+        "Use independently reset synthetic fixture/clock branches; tests and reports only. Any product/server/persistence defect returns to its resource-locked owning PR and must be fixed/revalidated before this task passes."
+      ],
+      "estimate_basis": "About 2 reference workloads for one formal security/account fixture suite; its implementation unit tests already exist. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One formal verification PR for harness/fixtures/assertions/evidence only; no implementation, adapter, schema or migration repair.",
+      "input_index": 44,
+      "status": "scheduled",
+      "start": 65.0,
+      "finish": 67.0,
+      "blocked_by": []
+    },
+    {
+      "id": "QA_RESERVATION_A",
+      "title": "Verify A reservation races and deadline priority",
+      "description": "Run real database/API contention and state-boundary tests for booking and qualifications.",
+      "requirement_ids": [
+        "REQ-004",
+        "REQ-005",
+        "REQ-006",
+        "REQ-007",
+        "REQ-008",
+        "REQ-009",
+        "REQ-010",
+        "REQ-011",
+        "REQ-012",
+        "REQ-013",
+        "REQ-035"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "WIRE_A",
+        "ENV"
+      ],
+      "resources": [
+        "qa-shared-env"
+      ],
+      "deliverable": "Verify A reservation races and deadline priority reproducible tests and actual result report.",
+      "acceptance": [
+        "Execute source scenarios 1-6,9,15-18 including exactly one of 20 same-slot contenders, different-device success, idempotent concurrent replay, grant uniqueness and revoke/approval races.",
+        "Test every time/purpose invalid condition, adjacent half-open slots, early/start/15-minute registration, pending expiry/approval race, owner start+5m cancel versus denied reschedule/manager cancel, terminal-state protection and failed-reschedule original state/version.",
+        "Delayed automatic end and late manual end retain planned statistical end; next reservation starts without old-user end and duplicate jobs/events/counters are absent.",
+        "Use independently reset synthetic fixture/clock branches; tests and reports only. Any product/server/persistence defect returns to its resource-locked owning PR and must be fixed/revalidated before this task passes."
+      ],
+      "estimate_basis": "About 3 reference workloads for focused database contention, replay, qualification and deadline fixture branches. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One formal verification PR for harness/fixtures/assertions/evidence only; no implementation, adapter, schema or migration repair.",
+      "input_index": 45,
+      "status": "scheduled",
+      "start": 67.0,
+      "finish": 70.0,
+      "blocked_by": []
+    },
+    {
+      "id": "QA_MAINT_MESSAGE_A",
+      "title": "Verify A maintenance, isolation and notification compensation",
+      "description": "Run cross-module maintenance/work-order and transactional recipient/reminder fault tests.",
+      "requirement_ids": [
+        "REQ-014",
+        "REQ-015",
+        "REQ-016",
+        "REQ-017",
+        "REQ-018",
+        "REQ-019",
+        "REQ-020",
+        "REQ-035"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "WIRE_A",
+        "ENV"
+      ],
+      "resources": [
+        "qa-shared-env"
+      ],
+      "deliverable": "Verify A maintenance, isolation and notification compensation reproducible tests and actual result report.",
+      "acceptance": [
+        "Execute source scenarios 7-8,19-22: adjacent/overlap/cancel remaining maintenance, ordinary disable versus atomic isolation, work-order state/handler/re-enable barriers and retained in_use.",
+        "Verify same-device reservation/maintenance contention, isolation rollback, role-union event dedup, event-time manager collection with lost-scope skip/new-manager exclusion and pure auditor non-recipient.",
+        "Inject delivery failure without business rollback, bounded retries and restart/manual races; stale-slot/reminder-at-start/in_use never sends, new reapproved slot sends once and old delivered history remains.",
+        "Workbench now..now+2h, owner messages/unread and current target permissions are correct.",
+        "Use independently reset synthetic fixture/clock branches; tests and reports only. Any product/server/persistence defect returns to its resource-locked owning PR and must be fixed/revalidated before this task passes."
+      ],
+      "estimate_basis": "About 3 reference workloads for formal maintenance/isolation and recipient/reminder fault-injection evidence. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One formal verification PR for harness/fixtures/assertions/evidence only; no implementation, adapter, schema or migration repair.",
+      "input_index": 46,
+      "status": "scheduled",
+      "start": 70.0,
+      "finish": 73.0,
+      "blocked_by": []
+    },
+    {
+      "id": "QA_REPORT_UI_A",
+      "title": "Verify A reporting, text safety and complete interface states",
+      "description": "Verify arithmetic, export/log retention and responsive keyboard interface behavior across all A pages.",
+      "requirement_ids": [
+        "REQ-021",
+        "REQ-022",
+        "REQ-023",
+        "REQ-024",
+        "REQ-025",
+        "REQ-026",
+        "REQ-031",
+        "REQ-035",
+        "REQ-013"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "WIRE_A",
+        "ENV"
+      ],
+      "resources": [
+        "qa-shared-env"
+      ],
+      "deliverable": "Verify A reporting, text safety and complete interface states reproducible tests and actual result report.",
+      "acceptance": [
+        "Execute scenarios 10,23-24 with 70/1320 weighted denominator and 120 planned minutes, creation-day clipping, zero denominator, disable/maintenance non-deduction and delayed automatic end.",
+        "Test max dates/search/page/rows, stable order/scope, UTF-8 quoted multiline CSV and =,+,-,@ escaping with numeric columns; no personal details/purpose exports.",
+        "All required page states at 360px/1440px, literal script/quotes/long Chinese wrapping and keyboard booking/cancel/message/approval with text day-view/focus-safe dialogs pass.",
+        "Audit is append-only/no auto-delete, logs alone age at 30 days, backups independently retain seven; DB outage/recovery, redaction and operations authorization pass.",
+        "Use independently reset synthetic fixture/clock branches; tests and reports only. Any product/server/persistence defect returns to its resource-locked owning PR and must be fixed/revalidated before this task passes.",
+        "Verify administrator qualification grant interval inputs/current-history display/revoke confirmation, scope/duplicate/conflict feedback and owner read-only controls against real APIs. Regrant must not revive cancelled reservations, and direct validity editing stays unavailable. Verify authorized fixed-lab rename through browser and direct API, deny unauthorized rename, retain the two stable lab IDs, scopes and device/history links, and expose no laboratory-add or migration workflow."
+      ],
+      "estimate_basis": "About 2 reference workloads for final arithmetic/retention/export and responsive keyboard checks, reusing existing component/unit suites. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One formal verification PR for harness/fixtures/assertions/evidence only; no implementation, adapter, schema or migration repair.",
+      "input_index": 47,
+      "status": "scheduled",
+      "start": 73.0,
+      "finish": 75.0,
+      "blocked_by": []
+    },
+    {
+      "id": "PERF_A",
+      "title": "Measure frozen core performance targets",
+      "description": "Run the approved core load with external integrations off and immutable method/sample metadata.",
+      "requirement_ids": [
+        "REQ-032",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "WIRE_A",
+        "PERF_FROZEN",
+        "ENV"
+      ],
+      "resources": [
+        "qa-shared-env"
+      ],
+      "deliverable": "Measure frozen core performance targets reproducible tests and actual result report.",
+      "acceptance": [
+        "Record actual hardware/data/50-session/ten-minute/warmup/mix/coverage/sample evidence and p95 query<=500ms/write<=800ms/unexpected-error<1%, counting expected errors separately.",
+        "No authorization/conflict checks are bypassed; day-view/self-list indexes and pagination hold at target size. Any missing explicit threshold or evidence blocks A.",
+        "Use independently reset synthetic fixture/clock branches; tests and reports only. Any product/server/persistence defect returns to its resource-locked owning PR and must be fixed/revalidated before this task passes."
+      ],
+      "estimate_basis": "About 2 reference workloads for executing/reporting the already frozen core method and preserving samples/configuration. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One formal verification PR for harness/fixtures/assertions/evidence only; no implementation, adapter, schema or migration repair.",
+      "input_index": 48,
+      "status": "scheduled",
+      "start": 75.0,
+      "finish": 77.0,
+      "blocked_by": []
+    },
+    {
+      "id": "RESTORE_A",
+      "title": "Prove blank-environment core recovery",
+      "description": "Actually restore the core backup into a blank isolated environment and measure loss/restore targets.",
+      "requirement_ids": [
+        "REQ-033",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "BACKUP",
+        "WIRE_A",
+        "ENV"
+      ],
+      "resources": [
+        "qa-shared-env"
+      ],
+      "deliverable": "Prove blank-environment core recovery reproducible tests and actual result report.",
+      "acceptance": [
+        "Evidence proves daily coverage <=24h loss and <=60m restore with devices/reservations/qualifications/orders/messages/audit relationships intact, synthetic data only.",
+        "Restored conflict guards work, failed-backup detection/manual instructions and latest-seven retention pass; protected credentials are not exposed.",
+        "Use independently reset synthetic fixture/clock branches; tests and reports only. Any product/server/persistence defect returns to its resource-locked owning PR and must be fixed/revalidated before this task passes."
+      ],
+      "estimate_basis": "About 2 reference workloads for one actual blank-environment restoration and integrity/target measurements. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One formal verification PR for harness/fixtures/assertions/evidence only; no implementation, adapter, schema or migration repair.",
+      "input_index": 49,
+      "status": "scheduled",
+      "start": 77.0,
+      "finish": 79.0,
+      "blocked_by": []
+    },
+    {
+      "id": "UPGRADE_A",
+      "title": "Prove core upgrade and compatible application rollback",
+      "description": "Execute a backed-up upgrade and rollback of the compatible prior application using the reviewed migration matrix.",
+      "requirement_ids": [
+        "REQ-002",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "BACKUP",
+        "WIRE_A",
+        "ENV"
+      ],
+      "resources": [
+        "qa-shared-env"
+      ],
+      "deliverable": "Prove core upgrade and compatible application rollback reproducible tests and actual result report.",
+      "acceptance": [
+        "Actual run preserves historical data/relationships and validates health, ordinary initialization twice and explicit initial-password recovery boundaries.",
+        "Backup compatibility verified before upgrade; destructive migration handling is explicit rather than an assumed data rollback.",
+        "Use independently reset synthetic fixture/clock branches; tests and reports only. Any product/server/persistence defect returns to its resource-locked owning PR and must be fixed/revalidated before this task passes."
+      ],
+      "estimate_basis": "About 2 reference workloads for one actual backed-up compatible upgrade/rollback rehearsal and evidence. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One formal verification PR for harness/fixtures/assertions/evidence only; no implementation, adapter, schema or migration repair.",
+      "input_index": 50,
+      "status": "scheduled",
+      "start": 79.0,
+      "finish": 81.0,
+      "blocked_by": []
+    },
+    {
+      "id": "MANUAL_A",
+      "title": "Write core user, administrator and operator manuals",
+      "description": "Write usable Chinese-product instructions and English planning deliverable documentation for requester/admin/core deployment, emergency handling, recovery and the A demo.",
+      "requirement_ids": [
+        "REQ-002",
+        "REQ-015",
+        "REQ-024",
+        "REQ-031",
+        "REQ-033",
+        "REQ-034",
+        "REQ-036"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "WIRE_A",
+        "BACKUP"
+      ],
+      "resources": [],
+      "deliverable": "Versioned core manuals, demo script and A evidence checklist.",
+      "acceptance": [
+        "Without source-code reading, perform booking/rejection, isolate without claiming hardware shutdown, diagnose notification retry and recover/deploy/reset safely.",
+        "A demo includes success, denial, unknown-external development branch explanation, isolation and notification-failure retry with integrations off.",
+        "A checklist lists all core REQ-001..026/031..036 evidence, design freezes, unresolved issues and two representative signatures; no incomplete B/full claim."
+      ],
+      "estimate_basis": "About 2 reference workloads for a coherent core user/admin/operator documentation and demo package against accepted behavior. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One documentation PR tied to the accepted core behavior; documentation neither changes code nor claims missing test results.",
+      "input_index": 51,
+      "status": "scheduled",
+      "start": 65.0,
+      "finish": 67.0,
+      "blocked_by": []
+    },
+    {
+      "id": "ACCEPT_A",
+      "title": "Reconcile core evidence and jointly sign Stage A",
+      "description": "Business and technical acceptance representatives run the core demo and reconcile every stated core criterion against actual results and design freezes.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-006",
+        "REQ-007",
+        "REQ-008",
+        "REQ-009",
+        "REQ-010",
+        "REQ-011",
+        "REQ-012",
+        "REQ-013",
+        "REQ-014",
+        "REQ-015",
+        "REQ-016",
+        "REQ-017",
+        "REQ-018",
+        "REQ-019",
+        "REQ-020",
+        "REQ-021",
+        "REQ-022",
+        "REQ-023",
+        "REQ-024",
+        "REQ-025",
+        "REQ-026",
+        "REQ-031",
+        "REQ-032",
+        "REQ-033",
+        "REQ-034",
+        "REQ-035",
+        "REQ-036"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "QA_AUTH_A",
+        "QA_RESERVATION_A",
+        "QA_MAINT_MESSAGE_A",
+        "QA_REPORT_UI_A",
+        "PERF_A",
+        "RESTORE_A",
+        "UPGRADE_A",
+        "MANUAL_A",
+        "ENV"
+      ],
+      "resources": [
+        "qa-shared-env"
+      ],
+      "deliverable": "Reconcile core evidence and jointly sign Stage A reproducible tests and actual result report.",
+      "acceptance": [
+        "The A coverage ledger includes all source core acceptance clauses/scenarios and REQ-031..036 core evidence, with no unexecuted/failing condition marked passed and no implementer self-waiver.",
+        "Both representatives sign A separately with known issues; full core operates with both external integrations off and does not wait for identity/assets.",
+        "Use independently reset synthetic fixture/clock branches; tests and reports only. Any product/server/persistence defect returns to its resource-locked owning PR and must be fixed/revalidated before this task passes."
+      ],
+      "estimate_basis": "About 2 reference workloads for demo execution and two-representative reconciliation of already produced evidence, without product implementation. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One formal verification PR for harness/fixtures/assertions/evidence only; no implementation, adapter, schema or migration repair.",
+      "input_index": 52,
+      "status": "scheduled",
+      "start": 81.0,
+      "finish": 83.0,
+      "blocked_by": []
+    },
+    {
+      "id": "A_RELEASE",
+      "title": "Release independently usable Stage A",
+      "description": "Record accepted prerequisites and the explicit internal approval state. No additional implementation is hidden in this gate.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-006",
+        "REQ-007",
+        "REQ-008",
+        "REQ-009",
+        "REQ-010",
+        "REQ-011",
+        "REQ-012",
+        "REQ-013",
+        "REQ-014",
+        "REQ-015",
+        "REQ-016",
+        "REQ-017",
+        "REQ-018",
+        "REQ-019",
+        "REQ-020",
+        "REQ-021",
+        "REQ-022",
+        "REQ-023",
+        "REQ-024",
+        "REQ-025",
+        "REQ-026",
+        "REQ-031",
+        "REQ-032",
+        "REQ-033",
+        "REQ-034",
+        "REQ-035",
+        "REQ-036"
+      ],
+      "duration": 0,
+      "depends_on": [
+        "ACCEPT_A"
+      ],
+      "resources": [],
+      "deliverable": "Release independently usable Stage A approval record",
+      "acceptance": [
+        "Accepted/merged core evidence and both representative signatures exist; only A is released while B remains unfinished."
+      ],
+      "estimate_basis": "Zero-work state gate; all design, validation and sign-off effort is estimated in its ordinary prerequisites.",
+      "kind": "milestone",
+      "external_ready": null,
+      "pr_scope": "No code PR; approval state only.",
+      "input_index": 53,
+      "status": "scheduled",
+      "start": 83.0,
+      "finish": 83.0,
+      "blocked_by": []
+    },
+    {
+      "id": "D_IDENTITY",
+      "title": "Design OIDC validation, linking and authentication modes",
+      "description": "Review concrete OIDC callback/security checks, protected credential references, stable trusted identity source, one-to-one linking data, local/enterprise session modes and concurrent emergency-admin guard.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-024",
+        "REQ-027",
+        "REQ-028",
+        "REQ-033",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "CORE_FROZEN"
+      ],
+      "resources": [
+        "backend-lead",
+        "db-reviewer"
+      ],
+      "deliverable": "Reviewed OIDC/linking/security and mode-transition contract.",
+      "acceptance": [
+        "Org_admin-only first association to an existing enabled internal user uses trustworthy stable identity, never email/display-name matching; identical linking is idempotent and different existing associations conflict without data changes.",
+        "No automatic accounts/roles, unlink/rebind/migration, enterprise-wide logout or upstream-disable push; internal role/scope authority and session limits remain intact, enterprise-only users need no local password.",
+        "Define actual callback tamper/expiry/missing-field/duplicate validation, simulator environment isolation and linked-enabled/linked-disabled/unlinked cases.",
+        "Enterprise enable revokes ordinary local sessions and requires enabled password-set org_admin; deactivation/role loss/force reset guard the last qualified emergency administrator concurrently.",
+        "Provider outage preserves enterprise mode/valid local-lifetime enterprise sessions; explicit close revokes enterprise sessions, switches local, retains relationships and requires manual temporary-password recovery where absent."
+      ],
+      "estimate_basis": "About 3 reference workloads because trusted linking, OIDC validation, session modes and concurrent emergency recovery require security/data review. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One OIDC/security/data-contract design PR including review corrections; real external details remain unknown.",
+      "input_index": 54,
+      "status": "scheduled",
+      "start": 63.0,
+      "finish": 66.0,
+      "blocked_by": []
+    },
+    {
+      "id": "D_ASSET",
+      "title": "Design asset mapping, ownership and source-time transactions",
+      "description": "Freeze cursor asset field normalization, explicit stable-lab mapping, immutable first binding, new-device defaults and source-time acceptance atomicity.",
+      "requirement_ids": [
+        "REQ-003",
+        "REQ-022",
+        "REQ-024",
+        "REQ-029",
+        "REQ-033",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "CORE_FROZEN"
+      ],
+      "resources": [
+        "backend-lead",
+        "db-reviewer"
+      ],
+      "deliverable": "Reviewed asset API/data and binding/integrity contract.",
+      "acceptance": [
+        "Fields asset_id/code/name/location/updated_at and stable UTC/time normalization are defined; mapping is org_admin-only and never guessed from name/location.",
+        "New valid mapped asset creates one disabled/approval-required/qualification-required device; absent mapping fails one item and other legal items continue. Bound map cannot migrate lab.",
+        "Source older=skip, equal/same fields=skip, equal/different=conflict, newer=atomic apply; failures keep prior watermark/fields and duplicate pages preserve creation time/local flags.",
+        "Explicit existing-device first binding atomically validates lab, code/fields and both one-to-one directions; failure rolls back association and fields. No code merge/unlink/rebind/delete is added."
+      ],
+      "estimate_basis": "About 3 reference workloads for immutable binding, field ownership, source-time ordering and per-item transaction design. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One asset contract/integrity design PR with transaction examples and review corrections.",
+      "input_index": 55,
+      "status": "scheduled",
+      "start": 66.0,
+      "finish": 69.0,
+      "blocked_by": []
+    },
+    {
+      "id": "D_SYNC",
+      "title": "Design bounded asset batches and confirmed recovery",
+      "description": "Freeze cursor/checkpoint representation, batch lifecycle, retry classification, admin continuation, invalid-checkpoint human confirmation and safe scheduled resume.",
+      "requirement_ids": [
+        "REQ-029",
+        "REQ-030",
+        "REQ-031",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "D_ASSET"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Reviewed sync batch/recovery protocol with fault tables.",
+      "acceptance": [
+        "Exactly one running or waiting-retry batch; repeated triggers return it. Daily 02:00 Asia/Shanghai, up to three 1/5/15-minute retries and terminal failure releases slot.",
+        "Auth/field failures are not blindly retried; valid items continue. Manual retry is a linked new batch from a valid checkpoint retaining commits.",
+        "Invalid checkpoint ends original batch with evidence and blocks scheduled implicit rescan; only org_admin confirmation creates linked full-rescan batch preserving mappings/bindings/watermarks/creation times/successes.",
+        "Repeated checkpoint failure demands another confirmation; successful full pagination restores schedule despite per-item field errors. Core readiness remains independent."
+      ],
+      "estimate_basis": "About 2 reference workloads for one batch/cursor/retry/recovery protocol based on the reviewed asset transactions. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One batch/cursor/recovery design PR; no estimates replace external materials.",
+      "input_index": 56,
+      "status": "scheduled",
+      "start": 69.0,
+      "finish": 71.0,
+      "blocked_by": []
+    },
+    {
+      "id": "D_B_UI_OPS",
+      "title": "Design integration pages and protected B deployment/recovery",
+      "description": "Review B integration API/UI states, protected credentials, binding-data backup, migration compatibility, emergency local entry and safe feature activation sequence.",
+      "requirement_ids": [
+        "REQ-025",
+        "REQ-027",
+        "REQ-028",
+        "REQ-029",
+        "REQ-030",
+        "REQ-031",
+        "REQ-033",
+        "REQ-034",
+        "REQ-036"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "D_IDENTITY",
+        "D_SYNC",
+        "D_OPS"
+      ],
+      "resources": [
+        "backend-lead",
+        "db-reviewer"
+      ],
+      "deliverable": "Reviewed B page/operations/migration addendum.",
+      "acceptance": [
+        "Integration status distinguishes running, waiting retry, failed, pending human recovery/linked recovery, provider outage and explicit identity-off; neither degrades core readiness.",
+        "Chinese pages never echo secret values, permit organization administration only and cover full keyboard/responsive/error states.",
+        "External flags stay off until A release, with backup/restore and upgrade/rollback proof for identity/asset bindings before real use; incomplete external materials halt real steps safely.",
+        "Deployment explains emergency qualification, authorized mode changes, no-password local recovery, no guard bypass by init and true B real-evidence requirements."
+      ],
+      "estimate_basis": "About 2 reference workloads for integration state/UI and protected deployment/migration/recovery addenda to existing core designs. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One cross-module B API/UI/operations design addendum PR with migration/data-integrity review.",
+      "input_index": 57,
+      "status": "scheduled",
+      "start": 71.0,
+      "finish": 73.0,
+      "blocked_by": []
+    },
+    {
+      "id": "B_FROZEN",
+      "title": "Approve and freeze enterprise implementation contracts",
+      "description": "Record accepted prerequisites and the explicit internal approval state. No additional implementation is hidden in this gate.",
+      "requirement_ids": [
+        "REQ-027",
+        "REQ-028",
+        "REQ-029",
+        "REQ-030",
+        "REQ-031",
+        "REQ-033",
+        "REQ-034",
+        "REQ-035",
+        "REQ-036"
+      ],
+      "duration": 0,
+      "depends_on": [
+        "D_IDENTITY",
+        "D_ASSET",
+        "D_SYNC",
+        "D_B_UI_OPS"
+      ],
+      "resources": [],
+      "deliverable": "Approve and freeze enterprise implementation contracts approval record",
+      "acceptance": [
+        "Positive-work B design/review corrections are accepted/merged; local simulator and mock adapter development may proceed without real external materials."
+      ],
+      "estimate_basis": "Zero-work state gate; all design, validation and sign-off effort is estimated in its ordinary prerequisites.",
+      "kind": "milestone",
+      "external_ready": null,
+      "pr_scope": "No code PR; approval state only.",
+      "input_index": 58,
+      "status": "scheduled",
+      "start": 73.0,
+      "finish": 73.0,
+      "blocked_by": []
+    },
+    {
+      "id": "DB_BINDINGS",
+      "title": "Implement identity and asset binding migrations",
+      "description": "Implement reviewed one-to-one identity/asset associations, stable mappings/source watermarks and traceable sync batch/checkpoint records, with safe compatible migration.",
+      "requirement_ids": [
+        "REQ-027",
+        "REQ-029",
+        "REQ-030",
+        "REQ-033",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "B_FROZEN",
+        "DB_CORE"
+      ],
+      "resources": [
+        "backend-lead",
+        "db-reviewer"
+      ],
+      "deliverable": "B migrations and uniqueness/compatibility tests.",
+      "acceptance": [
+        "Both association directions remain unique and permanent even for inactive accounts; data model preserves internal ID/lab/creation time and protected credential references.",
+        "Batch/checkpoint/recovery associations and source-time transactions support frozen invariants; migration preserves A data and compatible rollback boundary.",
+        "No features automatically enable during migration and no existing entity is merged by email/code/name."
+      ],
+      "estimate_basis": "About 2 reference workloads for a bounded reviewed B schema increment, uniqueness and prior-app compatibility checks. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One B persistence/migration PR with db-reviewer and executable integrity tests.",
+      "input_index": 59,
+      "status": "scheduled",
+      "start": 73.0,
+      "finish": 75.0,
+      "blocked_by": []
+    },
+    {
+      "id": "ID_LINK",
+      "title": "Implement administrator-only immutable identity linking",
+      "description": "Deliver first-link administration and internal account/session lookup without relying on real provider readiness.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-024",
+        "REQ-027",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "DB_BINDINGS",
+        "ACCOUNT_DISABLE",
+        "AUTH_LOCAL"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Identity-link APIs and synthetic identity tests.",
+      "acceptance": [
+        "Only org_admin links verified stable identity to a precreated enabled account; same association replays safely and different association/ordinary-user request rejects without partial state.",
+        "One-to-one retained binding survives deactivation; no unlink/rebind/auto-account/automatic admin role/email merge exists.",
+        "Enterprise account with no local password is not blocked by local pending-password state; changes are redacted audited and UI/API secrets never leak."
+      ],
+      "estimate_basis": "About 2 reference workloads for org-only first-link transactions and account lookup over frozen association tables. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One identity-association PR with local contract/transaction tests; capability remains integration-gated.",
+      "input_index": 60,
+      "status": "scheduled",
+      "start": 75.0,
+      "finish": 77.0,
+      "blocked_by": []
+    },
+    {
+      "id": "ID_CALLBACK_MOCK",
+      "title": "Implement OIDC callback and isolated provider simulator",
+      "description": "Implement frozen OIDC validation/session adapter and local development/test provider, with detached test setup before A activation.",
+      "requirement_ids": [
+        "REQ-027",
+        "REQ-028",
+        "REQ-035"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "ID_LINK"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "OIDC callback adapter and simulator/security test suite.",
+      "acceptance": [
+        "Linked enabled succeeds, linked disabled/unlinked reject; expiry/tamper/missing fields/duplicate identity/wrong response cannot create success or bypass core authorization.",
+        "No local password is needed for valid enterprise authentication; logout revokes only current LabFlow session and new logins authenticate with provider.",
+        "Simulator enabled only in development/test, no public bypass/default-password path; real provider selection remains gated until B_ACTIVATE plus real materials."
+      ],
+      "estimate_basis": "About 3 reference workloads for callback security and the isolated simulator, excluding later mode controls and real materials. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One OIDC callback/simulator PR with demanding security validation and integration-disabled default.",
+      "input_index": 61,
+      "status": "scheduled",
+      "start": 77.0,
+      "finish": 80.0,
+      "blocked_by": []
+    },
+    {
+      "id": "ID_MODE",
+      "title": "Implement safe enterprise mode and emergency credentials",
+      "description": "Implement transactional mode enable/disable, session origin revocation and last locally password-set emergency org_admin protection.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-027",
+        "REQ-028",
+        "REQ-031",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "ID_CALLBACK_MOCK",
+        "ACCOUNT_DISABLE"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Mode/configuration APIs and security/concurrency tests.",
+      "acceptance": [
+        "Enable rejects absent qualified emergency org_admin and temporary-password-only/lab_manager accounts; revokes ordinary local sessions and closes ordinary local login/reset while retaining strict emergency entry.",
+        "Concurrent disable/demotion/force-reset cannot remove last eligible emergency admin; initialization recovery cannot bypass guard, replacement must first complete local password setting.",
+        "Provider outage keeps enterprise mode and valid existing enterprise sessions until local idle/absolute timeout; no automatic local fallback.",
+        "Explicit org_admin close revokes enterprise sessions, returns local mode without booking/history/identity changes, never automatically issues passwords; absent-password user receives manual temp credential/change and retains same ID/history. Re-enable rechecks eligibility."
+      ],
+      "estimate_basis": "About 3 reference workloads for session-origin transitions and last-emergency-admin concurrent guards, including outage/close differences. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One authentication-mode PR with source scenarios 14/25/26 synthetic security tests; real verification later.",
+      "input_index": 62,
+      "status": "scheduled",
+      "start": 80.0,
+      "finish": 83.0,
+      "blocked_by": []
+    },
+    {
+      "id": "ASSET_APPLY",
+      "title": "Implement mapping, first binding and source-time-safe mock application",
+      "description": "Implement organization-only mappings and first binding plus cursor mock asset application using the reviewed transactional ownership rules.",
+      "requirement_ids": [
+        "REQ-003",
+        "REQ-022",
+        "REQ-024",
+        "REQ-029",
+        "REQ-035"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "DB_BINDINGS",
+        "DEVICE"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Asset mapping/binding/apply APIs and mock fixtures.",
+      "acceptance": [
+        "ASSET-01 mapped LAB-A creates exactly one disabled/approval-required/qualification-required device; missing map fails one item, legal items continue and later local business flags persist.",
+        "Mapping immutable after binding; external location never changes lab. Bound code/name/location local write is refused and no deletion/code merge/unlink/rebind occurs.",
+        "Older/equal-same/equal-different/newer order produces skip/skip/conflict/apply; illegal fields/code collisions keep old fields/watermark, duplicate pages preserve creation time.",
+        "Existing-device first binding validates lab/unique relations/code and atomically applies fields; both relationship/field partial effects roll back on any conflict."
+      ],
+      "estimate_basis": "About 3 reference workloads for mappings, first binding and source-time-safe per-item application; batch execution is separate. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One asset ownership/application PR with source scenarios 27-29 local transaction tests.",
+      "input_index": 63,
+      "status": "scheduled",
+      "start": 83.0,
+      "finish": 86.0,
+      "blocked_by": []
+    },
+    {
+      "id": "SYNC_BATCH",
+      "title": "Implement single-batch schedule and bounded continuation",
+      "description": "Build mock-backed daily/manual batch running state, classification, bounded retries and linked valid-checkpoint continuation.",
+      "requirement_ids": [
+        "REQ-029",
+        "REQ-030",
+        "REQ-031",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "ASSET_APPLY"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Batch runner and fault/retry tests.",
+      "acceptance": [
+        "Daily 02:00 local and org_admin manual triggers share one batch slot; running/waiting retry triggers return existing ID.",
+        "Recoverable timeout/network retry at 1/5/15m only three times; failed batch frees slot, auth/field failures do not blind-retry and legal items still continue.",
+        "Manual new batch links failure and resumes valid checkpoint without re-creating prior successful devices; no fourth automatic retry."
+      ],
+      "estimate_basis": "About 2 reference workloads for single-batch schedule/retry/valid continuation using accepted application transactions. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One sync-runner PR with source scenario 30 local controlled-clock/fault tests.",
+      "input_index": 64,
+      "status": "scheduled",
+      "start": 86.0,
+      "finish": 88.0,
+      "blocked_by": []
+    },
+    {
+      "id": "SYNC_RECOVERY",
+      "title": "Implement explicit invalid-checkpoint recovery and degradation",
+      "description": "Add terminated-invalid-checkpoint evidence, blocked automatic rescan, administrator-confirmed new full-rescan batch and observability state.",
+      "requirement_ids": [
+        "REQ-030",
+        "REQ-031",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "SYNC_BATCH"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Recovery APIs/job guards and recovery tests.",
+      "acceptance": [
+        "Invalid checkpoint ends original batch with reasons/checkpoint/commits and scheduled jobs cannot silently restart at page one.",
+        "Explicit org_admin confirmation creates linked full-rescan batch preserving successes/mappings/bindings/watermarks/creation times and applying stale/duplicate/tie rules.",
+        "Repeated invalidity demands fresh human confirmation; full pagination recovery resumes daily schedule while per-item errors remain recorded and legal items continue.",
+        "Core booking remains available using last success; statuses/last success/failure are non-sensitive and external outage does not fail database readiness."
+      ],
+      "estimate_basis": "About 2 reference workloads for one explicit invalid-checkpoint human-confirmation path and its degradation states. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One sync-recovery/observability PR with source scenario 31 local fault tests.",
+      "input_index": 65,
+      "status": "scheduled",
+      "start": 88.0,
+      "finish": 90.0,
+      "blocked_by": []
+    },
+    {
+      "id": "UI_IDENTITY",
+      "title": "Implement Chinese identity linking and mode administration",
+      "description": "Build OIDC entry, administrator first-link/config/mode views and emergency/local recovery guidance against frozen integration mocks.",
+      "requirement_ids": [
+        "REQ-025",
+        "REQ-026",
+        "REQ-027",
+        "REQ-028",
+        "REQ-031",
+        "REQ-034"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "UI_BASE",
+        "B_FROZEN"
+      ],
+      "resources": [
+        "frontend-lead"
+      ],
+      "deliverable": "Chinese identity pages and component tests.",
+      "acceptance": [
+        "Role-scoped first linking, immutable conflict feedback and no email auto-link/unlink/rebind controls; no-password SSO is distinct from local temporary change.",
+        "Enterprise-on/outage/explicit-off states distinct, emergency qualification guard and revocation actions explained; explicitly-off never claims B identity readiness.",
+        "No credential values returned/displayed; all error/loading/success states and keyboard/narrow/wide behavior meet REQ-025/026."
+      ],
+      "estimate_basis": "About 2 reference workloads for identity-link/mode/emergency pages using frozen mocks and existing UI primitives. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One frontend identity-interface PR against integration mocks.",
+      "input_index": 66,
+      "status": "scheduled",
+      "start": 73.0,
+      "finish": 75.0,
+      "blocked_by": []
+    },
+    {
+      "id": "UI_ASSET",
+      "title": "Implement Chinese asset mappings and sync operations",
+      "description": "Build stable asset-lab mapping/first-binding and manual/scheduled sync status/retry/human-confirmed recovery pages against mocks.",
+      "requirement_ids": [
+        "REQ-025",
+        "REQ-026",
+        "REQ-029",
+        "REQ-030",
+        "REQ-031",
+        "REQ-034"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "UI_BASE",
+        "B_FROZEN"
+      ],
+      "resources": [
+        "frontend-lead"
+      ],
+      "deliverable": "Chinese asset/sync pages and component tests.",
+      "acceptance": [
+        "Bound lab/fields are read-only and new devices show safe business defaults with explicit administrator confirmation.",
+        "Show running/waiting retry/failed/pending human recovery/new-batch association, last-success and per-item failures; confirm destructive-looking full rescan as preserving existing data.",
+        "Secrets never echo, ordinary users cannot administer and current permission/error/version states/keyboard/narrow/wide layouts are covered."
+      ],
+      "estimate_basis": "About 2 reference workloads for asset mapping/binding/sync/recovery pages using existing UI primitives. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One frontend asset-operation PR against integration mocks.",
+      "input_index": 67,
+      "status": "scheduled",
+      "start": 75.0,
+      "finish": 77.0,
+      "blocked_by": []
+    },
+    {
+      "id": "WIRE_B",
+      "title": "Connect enterprise frontend while flags remain off",
+      "description": "Wire B pages to accepted real application APIs without activating integrations or using external systems; detached mocks remain testing-only.",
+      "requirement_ids": [
+        "REQ-025",
+        "REQ-027",
+        "REQ-028",
+        "REQ-029",
+        "REQ-030",
+        "REQ-031",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "UI_IDENTITY",
+        "UI_ASSET",
+        "ID_MODE",
+        "SYNC_RECOVERY"
+      ],
+      "resources": [
+        "frontend-lead"
+      ],
+      "deliverable": "Real integration-admin frontend adapters and contract tests.",
+      "acceptance": [
+        "Core account/operations pages show correct current integration modes/guards and preserve stable IDs/business history.",
+        "Only accepted APIs are used, credentials never echoed and frontend handles partial unavailable-provider states safely.",
+        "Integration default off persists through deployment; backend/persistence defects go to locked owning PRs rather than this frontend wiring scope."
+      ],
+      "estimate_basis": "About 2 reference workloads for frontend B adapters and cross-page status wiring, with activation and server fixes excluded. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One frontend enterprise-wiring PR, no backend repairs or external activation.",
+      "input_index": 68,
+      "status": "scheduled",
+      "start": 90.0,
+      "finish": 92.0,
+      "blocked_by": []
+    },
+    {
+      "id": "RESTORE_BINDINGS",
+      "title": "Prove recovery of identity and asset binding data",
+      "description": "Supplement A recovery with synthetic-but-real-application binding records and sync recovery state before any real external use.",
+      "requirement_ids": [
+        "REQ-027",
+        "REQ-029",
+        "REQ-030",
+        "REQ-033",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "BACKUP",
+        "ID_MODE",
+        "SYNC_RECOVERY",
+        "WIRE_B",
+        "ENV"
+      ],
+      "resources": [
+        "qa-shared-env"
+      ],
+      "deliverable": "Prove recovery of identity and asset binding data reproducible tests and actual result report.",
+      "acceptance": [
+        "Blank isolated restore includes immutable identity associations, one-to-one asset links/mappings/watermarks/creation times/batch recovery associations and necessary protected configuration.",
+        "<=24h loss/<=60m recovery targets and latest-seven backup retention remain proven; restored uniqueness, current authentication-mode/emergency guard and booking conflicts hold.",
+        "This proves data restoration only, never claims three real provider accounts or real asset evidence; B_ACTIVATE and real-use tasks require this accepted result.",
+        "Use independently reset synthetic fixture/clock branches; tests and reports only. Any product/server/persistence defect returns to its resource-locked owning PR and must be fixed/revalidated before this task passes."
+      ],
+      "estimate_basis": "About 2 reference workloads for supplementary blank-environment association/recovery-state restoration, reusing A backup tooling. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One formal verification PR for harness/fixtures/assertions/evidence only; no implementation, adapter, schema or migration repair.",
+      "input_index": 69,
+      "status": "scheduled",
+      "start": 92.0,
+      "finish": 94.0,
+      "blocked_by": []
+    },
+    {
+      "id": "UPGRADE_B",
+      "title": "Prove B migration and safe compatible rollback",
+      "description": "Upgrade A to default-disabled B with reviewed binding migrations, then roll back to the compatible application boundary in isolation.",
+      "requirement_ids": [
+        "REQ-027",
+        "REQ-028",
+        "REQ-029",
+        "REQ-030",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "A_RELEASE",
+        "BACKUP",
+        "WIRE_B",
+        "ENV"
+      ],
+      "resources": [
+        "qa-shared-env"
+      ],
+      "deliverable": "Prove B migration and safe compatible rollback reproducible tests and actual result report.",
+      "acceptance": [
+        "Actual backup/migration/upgrade/rollback evidence preserves A history and B associations, no implicit rebind or recreated devices, and emergency guards cannot be bypassed by init.",
+        "Unknown external materials stop safely with flags off; external feature activation is not part of this rehearsal.",
+        "Use independently reset synthetic fixture/clock branches; tests and reports only. Any product/server/persistence defect returns to its resource-locked owning PR and must be fixed/revalidated before this task passes."
+      ],
+      "estimate_basis": "About 2 reference workloads for the B binding migration/compatible rollback rehearsal in a default-disabled configuration. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One formal verification PR for harness/fixtures/assertions/evidence only; no implementation, adapter, schema or migration repair.",
+      "input_index": 70,
+      "status": "scheduled",
+      "start": 94.0,
+      "finish": 96.0,
+      "blocked_by": []
+    },
+    {
+      "id": "B_ACTIVATE",
+      "title": "Enable sandbox integration paths after protected gates",
+      "description": "Package controlled local/isolated-test integration flag activation with accepted A, restored binding evidence and compatible migration proof. Real provider modes still await actual materials; mocks cannot release B.",
+      "requirement_ids": [
+        "REQ-028",
+        "REQ-030",
+        "REQ-031",
+        "REQ-033",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "A_RELEASE",
+        "RESTORE_BINDINGS",
+        "UPGRADE_B",
+        "WIRE_B"
+      ],
+      "resources": [
+        "backend-lead"
+      ],
+      "deliverable": "Reviewed B activation/configuration procedure and local guard tests.",
+      "acceptance": [
+        "Stage A is accepted before any application external-integration flag is enabled; protected backups/binding restore and upgrade/rollback proof are present before real use.",
+        "Real unavailable identities/assets remain explicitly pending rather than replaced by fake readiness; simulator allowed only in isolated tests.",
+        "Correct emergency qualification and secret-protected configuration prevent default or temporary credential bypass; real-use paths remain unavailable until configured real materials."
+      ],
+      "estimate_basis": "About 2 reference workloads for gated operator/configuration activation and safe-unavailable-material tests after A and data proof. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One backend/deployment activation PR over existing schema, with tests and gated operator steps.",
+      "input_index": 71,
+      "status": "scheduled",
+      "start": 96.0,
+      "finish": 98.0,
+      "blocked_by": []
+    },
+    {
+      "id": "QA_MOCK_B",
+      "title": "Verify integrated enterprise contracts with isolated simulators",
+      "description": "Run cross-module synthetic OIDC and asset simulations after protected activation in the shared environment.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-027",
+        "REQ-028",
+        "REQ-029",
+        "REQ-030",
+        "REQ-031",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "B_ACTIVATE",
+        "ENV"
+      ],
+      "resources": [
+        "qa-shared-env"
+      ],
+      "deliverable": "Verify integrated enterprise contracts with isolated simulators reproducible tests and actual result report.",
+      "acceptance": [
+        "Execute source scenarios 25-31 and enterprise scenario 14: immutable identity link/no-local-password entry/current-session logout, mode revocations/outage/explicit close, final-emergency concurrent guard and manual no-password local recovery.",
+        "Verify source mapping/time ties/atomic first binding, single batch retries/slot release/manual continuation and confirmed invalid-checkpoint rescan without destructive resets.",
+        "Results label all provider/asset evidence as simulated and leave real ID/asset acceptance and B/full sign-off outstanding.",
+        "Use independently reset synthetic fixture/clock branches; tests and reports only. Any product/server/persistence defect returns to its resource-locked owning PR and must be fixed/revalidated before this task passes."
+      ],
+      "estimate_basis": "About 2 reference workloads for cross-module simulator evidence using the already extensive local security/sync suites. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One formal verification PR for harness/fixtures/assertions/evidence only; no implementation, adapter, schema or migration repair.",
+      "input_index": 72,
+      "status": "scheduled",
+      "start": 98.0,
+      "finish": 100.0,
+      "blocked_by": []
+    },
+    {
+      "id": "OIDC_REAL",
+      "title": "Adapt and integrate the real OIDC sandbox",
+      "description": "Configure the real provider using its actual metadata/callback/credentials and positively integrate login/denial/association/session/logout, retaining the frozen security architecture.",
+      "requirement_ids": [
+        "REQ-027",
+        "REQ-028",
+        "REQ-031",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "IDENTITY_READY",
+        "B_ACTIVATE",
+        "QA_MOCK_B"
+      ],
+      "resources": [
+        "backend-lead",
+        "qa-shared-env"
+      ],
+      "deliverable": "Real OIDC configuration/adapter PR and reproducible three-account integration evidence.",
+      "acceptance": [
+        "Use real linked-enabled success, linked-disabled denial and unlinked denial accounts; no synthetic class fills missing materials.",
+        "Validate real callbacks, tampering/error/expiry and association conflict without unauthorized sessions; roles remain internal, no default/simulator identity entrance.",
+        "Real provider entry observes emergency mode guards, local/enterprise revocations/outage/explicit close behavior and current-session logout; core remains available.",
+        "No binding schema/integrity change is concealed in this PR; required changes return to DB_BINDINGS with db-reviewer and renewed recovery proof before real use."
+      ],
+      "estimate_basis": "About 3 reference workloads for actual provider configuration/security tracing and three-account integration; outside waiting is not estimated. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One real-provider adapter/configuration PR with backend-lead and shared formal environment; includes positive integration workload.",
+      "input_index": 73,
+      "status": "blocked",
+      "start": null,
+      "finish": null,
+      "blocked_by": [
+        "IDENTITY_READY"
+      ]
+    },
+    {
+      "id": "ASSET_REAL",
+      "title": "Adapt and integrate the real asset sandbox",
+      "description": "Use actual sandbox authentication, documents and sample assets to integrate cursor pages, mapping/application, exceptions and safe degraded operations.",
+      "requirement_ids": [
+        "REQ-029",
+        "REQ-030",
+        "REQ-031",
+        "REQ-034",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "ASSET_READY",
+        "B_ACTIVATE",
+        "QA_MOCK_B"
+      ],
+      "resources": [
+        "backend-lead",
+        "qa-shared-env"
+      ],
+      "deliverable": "Real asset adapter/configuration PR and sandbox reconciliation evidence.",
+      "acceptance": [
+        "Real sample pagination/authentication matches local mapped output and preserved local policies/creation time/source watermark.",
+        "Real/methodologically injected timeout, repeated-page and checkpoint failure demonstrate bounded retry/continuation/human confirmation with secrets redacted.",
+        "Last success persists and core readiness/booking do not fail on unavailable assets; no dependency on real identity readiness.",
+        "Persistence changes, if needed, return to DB_BINDINGS with db-reviewer and renewed recovery proof; no unreviewed schema edits in adapter scope."
+      ],
+      "estimate_basis": "About 2 reference workloads for actual authentication/paging/sample reconciliation against an already mock-validated adapter. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One real-asset adapter/configuration PR with backend-lead and shared formal environment.",
+      "input_index": 74,
+      "status": "scheduled",
+      "start": 100.0,
+      "finish": 102.0,
+      "blocked_by": []
+    },
+    {
+      "id": "QA_REAL_IDENTITY",
+      "title": "Accept all real identity classes and mode boundaries",
+      "description": "Independently validate the real identity integration after its adapter delivery, with actual provider accounts and current permission matrix.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-027",
+        "REQ-028",
+        "REQ-031",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "OIDC_REAL",
+        "ENV"
+      ],
+      "resources": [
+        "qa-shared-env"
+      ],
+      "deliverable": "Accept all real identity classes and mode boundaries reproducible tests and actual result report.",
+      "acceptance": [
+        "Three real account classes supply success/denial/denial proof; actual scope/roles, callback tamper/errors, first-link conflict and no-password SSO pass.",
+        "Test emergency eligibility, last-qualified concurrent disable/demotion/reset, ordinary local revocation, provider-outage no fallback and explicit-close/recover/re-enable history retention.",
+        "Only currently active real enterprise entry qualifies; explicit disable, simulator-only or missing-class evidence blocks this task.",
+        "Use independently reset synthetic fixture/clock branches; tests and reports only. Any product/server/persistence defect returns to its resource-locked owning PR and must be fixed/revalidated before this task passes."
+      ],
+      "estimate_basis": "About 2 reference workloads for independent three-real-account and mode-boundary acceptance of the delivered real adapter. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One formal verification PR for harness/fixtures/assertions/evidence only; no implementation, adapter, schema or migration repair.",
+      "input_index": 75,
+      "status": "blocked",
+      "start": null,
+      "finish": null,
+      "blocked_by": [
+        "IDENTITY_READY"
+      ]
+    },
+    {
+      "id": "QA_REAL_ASSET",
+      "title": "Accept real asset synchronization and recovery",
+      "description": "Independently validate sandbox assets plus deterministic fault-injected retry and recovery against the frozen adapter.",
+      "requirement_ids": [
+        "REQ-003",
+        "REQ-022",
+        "REQ-029",
+        "REQ-030",
+        "REQ-031",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "ASSET_REAL",
+        "ENV"
+      ],
+      "resources": [
+        "qa-shared-env"
+      ],
+      "deliverable": "Accept real asset synchronization and recovery reproducible tests and actual result report.",
+      "acceptance": [
+        "Real paging/authentication/data reconciliation and source scenarios 27-31 pass, including one-to-one binding rollbacks, tie/old/new source behavior and stable creation times/local policies.",
+        "One waiting-retry batch, exactly three retries/no fourth, linked valid-checkpoint new batch, invalid-checkpoint no scheduled rescan, explicit full rescan and repeat confirmation are demonstrated.",
+        "Successful complete traversal resumes schedule despite item errors; no secret echo/export/log and no core blockage.",
+        "Use independently reset synthetic fixture/clock branches; tests and reports only. Any product/server/persistence defect returns to its resource-locked owning PR and must be fixed/revalidated before this task passes."
+      ],
+      "estimate_basis": "About 2 reference workloads for independent real paging/application and controlled batch-recovery acceptance. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One formal verification PR for harness/fixtures/assertions/evidence only; no implementation, adapter, schema or migration repair.",
+      "input_index": 76,
+      "status": "scheduled",
+      "start": 102.0,
+      "finish": 104.0,
+      "blocked_by": []
+    },
+    {
+      "id": "QA_CROSS_B",
+      "title": "Verify cross-module enterprise flows and B interface quality",
+      "description": "Run main-page end-to-end and core-regression evidence in the enterprise-on sandbox configuration using real integrations.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-003",
+        "REQ-022",
+        "REQ-024",
+        "REQ-025",
+        "REQ-026",
+        "REQ-027",
+        "REQ-028",
+        "REQ-029",
+        "REQ-030",
+        "REQ-031",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "QA_REAL_IDENTITY",
+        "QA_REAL_ASSET",
+        "ENV"
+      ],
+      "resources": [
+        "qa-shared-env"
+      ],
+      "deliverable": "Verify cross-module enterprise flows and B interface quality reproducible tests and actual result report.",
+      "acceptance": [
+        "Real identity login through booking/messages/management/asset-created devices preserves roles/scopes, deadline rules, immutable IDs/creation-time reports and redacted append-only audit.",
+        "All integration pages plus impacted core pages meet Chinese labels, full feedback states, keyboard focus, plain-text safety and 360px/1440px behavior.",
+        "Real identity outage/explicit close and asset retry/pending-human-recovery statuses differ and leave core readiness/booking correct; active real identity is restored for B acceptance.",
+        "Use independently reset synthetic fixture/clock branches; tests and reports only. Any product/server/persistence defect returns to its resource-locked owning PR and must be fixed/revalidated before this task passes."
+      ],
+      "estimate_basis": "About 2 reference workloads for real integrated page flows and focused core/UI regression; local module suites are already delivered. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One formal verification PR for harness/fixtures/assertions/evidence only; no implementation, adapter, schema or migration repair.",
+      "input_index": 77,
+      "status": "blocked",
+      "start": null,
+      "finish": null,
+      "blocked_by": [
+        "IDENTITY_READY"
+      ]
+    },
+    {
+      "id": "PERF_B",
+      "title": "Measure B real-integration timeout and degradation behavior",
+      "description": "Execute the approved B method on real sandbox configuration, preserving core latency/error targets and observing external timeout/degradation separately.",
+      "requirement_ids": [
+        "REQ-028",
+        "REQ-030",
+        "REQ-031",
+        "REQ-032",
+        "REQ-035"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "QA_CROSS_B",
+        "PERF_FROZEN",
+        "ENV"
+      ],
+      "resources": [
+        "qa-shared-env"
+      ],
+      "deliverable": "Measure B real-integration timeout and degradation behavior reproducible tests and actual result report.",
+      "acceptance": [
+        "All fixed data/hardware/50-session/ten-minute/sample/method conditions are recorded, core query/write/error limits pass without relaxing authorization or conflict checks.",
+        "Real integration timeouts and degradation are measured separately from excluded external API/export latency; preserved core readiness and safe session/batch behavior are evidenced.",
+        "Missing real evidence or any threshold failure blocks B; changed method first requires renewed representative freeze.",
+        "Use independently reset synthetic fixture/clock branches; tests and reports only. Any product/server/persistence defect returns to its resource-locked owning PR and must be fixed/revalidated before this task passes."
+      ],
+      "estimate_basis": "About 2 reference workloads for frozen B samples, real timeout/degradation evidence and core-threshold confirmation. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One formal verification PR for harness/fixtures/assertions/evidence only; no implementation, adapter, schema or migration repair.",
+      "input_index": 78,
+      "status": "blocked",
+      "start": null,
+      "finish": null,
+      "blocked_by": [
+        "IDENTITY_READY"
+      ]
+    },
+    {
+      "id": "MANUAL_B",
+      "title": "Write B integration, emergency and recovery instructions",
+      "description": "Extend manuals for first associations/mappings, real setup, emergency qualification, mode outage/close, no-password local recovery, sync continuation/confirmed rescan and protected migration/restore.",
+      "requirement_ids": [
+        "REQ-002",
+        "REQ-027",
+        "REQ-028",
+        "REQ-029",
+        "REQ-030",
+        "REQ-031",
+        "REQ-033",
+        "REQ-034",
+        "REQ-036"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "B_ACTIVATE"
+      ],
+      "resources": [],
+      "deliverable": "B manuals, real-demo script and detailed evidence/signature checklist.",
+      "acceptance": [
+        "Operator follows instructions without source reading and keeps original IDs/history; credentials never appear in examples.",
+        "Distinct missing-real-materials, simulator-only, provider-outage, explicit identity-off and pending-human-recovery states have safe steps and cannot claim B complete.",
+        "B checklist separates REQ-027..030 real evidence and REQ-031..036 integration supplements, binding restore, upgrade, frozen methods/designs, issues and both representative signatures."
+      ],
+      "estimate_basis": "About 2 reference workloads for integration/emergency/recovery addenda and a real-evidence checklist built on the A manuals. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One B documentation PR; real results remain unfilled until actual evidence tasks pass.",
+      "input_index": 79,
+      "status": "scheduled",
+      "start": 98.0,
+      "finish": 100.0,
+      "blocked_by": []
+    },
+    {
+      "id": "EVIDENCE_B",
+      "title": "Reconcile real enterprise evidence and demo records",
+      "description": "Populate the B traceability/checklist and real-login/asset-sync demo from actual reviewed reports, not provisional mock claims.",
+      "requirement_ids": [
+        "REQ-027",
+        "REQ-028",
+        "REQ-029",
+        "REQ-030",
+        "REQ-031",
+        "REQ-032",
+        "REQ-033",
+        "REQ-034",
+        "REQ-035",
+        "REQ-036"
+      ],
+      "duration": 1,
+      "depends_on": [
+        "MANUAL_B",
+        "QA_CROSS_B",
+        "PERF_B",
+        "RESTORE_BINDINGS",
+        "UPGRADE_B"
+      ],
+      "resources": [],
+      "deliverable": "Completed B evidence ledger and demonstrated operator/user instructions.",
+      "acceptance": [
+        "All explicit integration acceptance clauses and source scenarios 25-32 link to actual evidence; three real identity classes and real asset results remain distinct from mock records.",
+        "REQ-031..036 B operations/performance/binding recovery/migration/testing/manual evidence and frozen design/method versions are complete.",
+        "Any unexecuted/failed criterion or known blocker remains listed and prevents acceptance; no evidence rewritten to pass missing conditions."
+      ],
+      "estimate_basis": "About 1 reference workload for a small ledger/demo-record consolidation from completed actual reports. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One small documentation/evidence PR consolidating accepted real results; no product repair.",
+      "input_index": 80,
+      "status": "blocked",
+      "start": null,
+      "finish": null,
+      "blocked_by": [
+        "IDENTITY_READY"
+      ]
+    },
+    {
+      "id": "ACCEPT_B",
+      "title": "Jointly sign real enterprise Stage B",
+      "description": "Business and technical representatives execute the real login/asset demo and sign all integration evidence independently of prior A release.",
+      "requirement_ids": [
+        "REQ-027",
+        "REQ-028",
+        "REQ-029",
+        "REQ-030",
+        "REQ-031",
+        "REQ-032",
+        "REQ-033",
+        "REQ-034",
+        "REQ-035",
+        "REQ-036"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "EVIDENCE_B",
+        "QA_REAL_IDENTITY",
+        "QA_REAL_ASSET",
+        "PERF_B",
+        "ENV"
+      ],
+      "resources": [
+        "qa-shared-env"
+      ],
+      "deliverable": "Jointly sign real enterprise Stage B reproducible tests and actual result report.",
+      "acceptance": [
+        "Both representatives verify every B criterion with real provider active, actual three account classes/assets, binding restore/migration proof and no unmet explicit condition.",
+        "Simulated success, inactive identity entry or missing evidence cannot release B; implementers cannot self-waive any failure.",
+        "Use independently reset synthetic fixture/clock branches; tests and reports only. Any product/server/persistence defect returns to its resource-locked owning PR and must be fixed/revalidated before this task passes."
+      ],
+      "estimate_basis": "About 2 reference workloads for the real demo and two-representative review of complete integration evidence, without repairs. Includes the scoped implementation/design or test execution, supporting tests, documentation, review and expected corrections.",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "One formal verification PR for harness/fixtures/assertions/evidence only; no implementation, adapter, schema or migration repair.",
+      "input_index": 81,
+      "status": "blocked",
+      "start": null,
+      "finish": null,
+      "blocked_by": [
+        "IDENTITY_READY"
+      ]
+    },
+    {
+      "id": "B_RELEASE",
+      "title": "Release mandatory real enterprise Stage B",
+      "description": "Record accepted prerequisites and the explicit internal approval state. No additional implementation is hidden in this gate.",
+      "requirement_ids": [
+        "REQ-027",
+        "REQ-028",
+        "REQ-029",
+        "REQ-030",
+        "REQ-031",
+        "REQ-032",
+        "REQ-033",
+        "REQ-034",
+        "REQ-035",
+        "REQ-036"
+      ],
+      "duration": 0,
+      "depends_on": [
+        "ACCEPT_B"
+      ],
+      "resources": [],
+      "deliverable": "Release mandatory real enterprise Stage B approval record",
+      "acceptance": [
+        "Both representatives signed B based on accepted/merged real-integration evidence and active real identity entry."
+      ],
+      "estimate_basis": "Zero-work state gate; all design, validation and sign-off effort is estimated in its ordinary prerequisites.",
+      "kind": "milestone",
+      "external_ready": null,
+      "pr_scope": "No code PR; approval state only.",
+      "input_index": 82,
+      "status": "blocked",
+      "start": null,
+      "finish": null,
+      "blocked_by": [
+        "IDENTITY_READY"
+      ]
+    },
+    {
+      "id": "PROJECT_COMPLETE",
+      "title": "Declare complete LabFlow delivery",
+      "description": "Record accepted prerequisites and the explicit internal approval state. No additional implementation is hidden in this gate.",
+      "requirement_ids": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-006",
+        "REQ-007",
+        "REQ-008",
+        "REQ-009",
+        "REQ-010",
+        "REQ-011",
+        "REQ-012",
+        "REQ-013",
+        "REQ-014",
+        "REQ-015",
+        "REQ-016",
+        "REQ-017",
+        "REQ-018",
+        "REQ-019",
+        "REQ-020",
+        "REQ-021",
+        "REQ-022",
+        "REQ-023",
+        "REQ-024",
+        "REQ-025",
+        "REQ-026",
+        "REQ-027",
+        "REQ-028",
+        "REQ-029",
+        "REQ-030",
+        "REQ-031",
+        "REQ-032",
+        "REQ-033",
+        "REQ-034",
+        "REQ-035",
+        "REQ-036"
+      ],
+      "duration": 0,
+      "depends_on": [
+        "A_RELEASE",
+        "B_RELEASE"
+      ],
+      "resources": [],
+      "deliverable": "Declare complete LabFlow delivery approval record",
+      "acceptance": [
+        "A and B have independent signed releases; project remains incomplete while the real identity branch is blocked."
+      ],
+      "estimate_basis": "Zero-work state gate; all design, validation and sign-off effort is estimated in its ordinary prerequisites.",
+      "kind": "milestone",
+      "external_ready": null,
+      "pr_scope": "No code PR; approval state only.",
+      "input_index": 83,
+      "status": "blocked",
+      "start": null,
+      "finish": null,
+      "blocked_by": [
+        "IDENTITY_READY"
+      ]
+    }
+  ],
+  "localization": {
+    "snapshot": "locale-snapshot-en.json",
+    "messages_sha256": "2902e1a4a6abab0e6eda1534e820f67bcd795489c499d20d63158401d6efad34"
+  }
+}

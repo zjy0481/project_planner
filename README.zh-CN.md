@@ -1,20 +1,30 @@
 # project-planner
 
-这是一个必须显式调用的 Codex 技能：它把需求文档转换为可独立审查的 PR 任务、受依赖和资源约束的相对排程，以及带甘特图的本地项目计划。它只写入本地规划产物，不创建 Issue 或 PR，也不实现业务代码。
+这是一个必须显式调用的 Codex 技能：它把需求文档拆成可独立开发、测试和审查的 PR 任务，并生成受依赖与资源约束的相对排程、甘特图和本地项目计划。它只创建本地规划产物，不创建 Issue 或 PR，也不实现项目代码。
 
 English: [README.md](README.md)
 
-## 供AI阅读：如何安装技能
+## 效果预览
 
-请从[源仓库](https://github.com/zjy0481/project_management/tree/dev/project-planner)的 `dev` 分支安装，并且只安装其中的 `project-planner` 目录。不要假定 `main` 分支包含此技能。
+LabFlow 是一个虚构的共享实验室设备预约与运维平台。下图来自已通过独立审查的简体中文计划；完整演示同时提供原始需求、计划输入、排程数据、文案快照和审查记录。
 
-优先使用已安装的 `$skill-installer`，并传入这个完整 URL：
+[![LabFlow 中文甘特图预览：相对工作量、并行容量与依赖门槛](https://raw.githubusercontent.com/zjy0481/Image/blank/labflow-gantt-zh-cn-20261010T105107137Z.jpg)](demo/labflow/gantt-zh-cn.svg)
+
+[中文项目计划](demo/labflow/plan-zh-cn.md) · [交互式甘特图](demo/labflow/gantt-zh-cn.html) · [完整 SVG 图](demo/labflow/gantt-zh-cn.svg) · [审查记录](demo/labflow/review-zh-cn.md) · [全部演示文件](demo/labflow/README.md)
+
+图片展示甘特图的起始部分。条长表示粗略相对工作量，`T+N` 不对应现实日历时间。企业身份系统就绪时间未知，其真实接入与阶段 B 放行保持阻塞，阶段 A 可独立推进。下载自包含 HTML 并在本地打开，即可查看完整排程和任务详情。
+
+## 安装技能
+
+通过 AI 安装时，请从[源仓库](https://github.com/zjy0481/project_planner/tree/dev/project-planner)的 `dev` 分支安装，并且只安装其中的 `project-planner` 目录。不要假设 `main` 分支包含此技能。
+
+优先使用已安装的 `$skill-installer`，并传入以下完整 URL：
 
 ```text
-https://github.com/zjy0481/project_management/tree/dev/project-planner
+https://github.com/zjy0481/project_planner/tree/dev/project-planner
 ```
 
-URL 中的 `/tree/dev/` 不可省略；省略后安装器可能使用默认的 `main` 引用。如果必须手动安装，请保留完整目录树及其元数据，并根据选择的作用域只复制到一个目标：
+URL 中的 `/tree/dev/` 不可省略；省略后安装器可能选用默认分支。若需手动安装，请将完整技能目录复制到以下一个作用域：
 
 ```text
 仓库作用域：<your-repo>/.agents/skills/project-planner
@@ -22,81 +32,83 @@ URL 中的 `/tree/dev/` 不可省略；省略后安装器可能使用默认的 `
 来源目录：  <checkout>/project-planner
 ```
 
-不要覆盖已有目标。不要扁平化目录或只复制 `SKILL.md`；必须保留 `agents/openai.yaml`、`references/` 和 `scripts/`。根据 [OpenAI Skills 官方文档](https://developers.openai.com/zh-Hans/docs/build-skills)，`.agents/skills` 是受支持的目录。已安装的工具也可能使用环境配置的旧式 `.codex/skills` 目录，因此应遵循工具报告的目标位置，不要创建重复副本。
+请保留完整目录树，包括 `config.json`、`agents/openai.yaml`、`references/` 和 `scripts/`（含配置助手与语言资源）。不要只复制 `SKILL.md` 或扁平化目录，也不要覆盖已有安装。更新技能时保留用户已有的配置、自定义字段和 `user-locales/` 运行时文案包。运行时语言包仅保存在本地，不随技能源码发布。安装目录旁的 `config.json` 由使用该安装副本的项目共享，它与 Codex 设置分开。
 
-在获得明确安装授权后，检查以下事项：
+安装工具可能使用环境配置的旧式 `.codex/skills` 目录；请遵循工具报告的位置，不要创建重复副本。OpenAI [Codex Skills 官方文档](https://developers.openai.com/zh-Hans/docs/build-skills)介绍了受支持的 `.agents/skills` 目录。
 
-- 安装目录名称确实是 `project-planner`；
-- `agents/openai.yaml` 仍保留 `policy.allow_implicit_invocation: false`；
-- `python -X utf8 "<skill-dir>/scripts/build_plan.py" --help` 成功；
-- 技能发现或刷新操作能够看到该技能；
-- 代理报告准确的安装位置。
+用户未明确要求安装时，代理不得自行安装或更改安装目录。经授权安装后，应检查安装目录名称、`policy.allow_implicit_invocation: false` 是否保留、生成器的 `--help` 是否成功、技能发现是否能看到该技能，以及准确安装路径。
 
-仅阅读或编辑本 README 不构成安装请求。没有用户明确请求时，代理不得安装技能或修改配置。
+还应验证两种内置语言都能生成有效快照。临时输出请放在技能安装目录之外：
 
-## 面向使用者：如何使用技能并查看结果
-
-准备好一份需求文档，调用 `project-planner`，就可以得到一份开发计划和对应的甘特图。它会把需求拆成便于分别开发、测试和提交 PR 的小任务，帮助你看清：
-
-- 每个任务要做什么，以及怎样才算完成；
-- 哪些任务可以同时开工，哪些必须等前面的任务完成；
-- 各项工作的工作量大致相差多少，整个项目按什么顺序推进。
-
-### 甘特图中的时间是什么意思？
-
-这条时间轴用来比较工作量、展示任务的先后与并行关系。图中使用 `T+0`、`T+1` 等相对位置，一个单位不对应固定的小时数或工作日数。实际耗时取决于开发效率、人员安排和等待情况，技能不会据此估算项目需要多少天。
-
-估算时，可以选一个简单任务作为 1 个相对工作单位，再粗略比较其他任务的大小。例如，A 的工作量大约是 B 的两倍，就将 A 记为 2，B 记为 1。如果 B 依赖 A，A 可以安排在 `T+0 → T+2`，B 安排在 `T+2 → T+3`；如果两者独立，而且人员和资源允许，也可以都从 `T+0` 开始。
-
-因此，看条长可以比较工作量，看位置和箭头可以了解开发顺序。比例只需大致合理，无需精确到小数；A 的条长是 B 的两倍，也不意味着现实耗时一定是两倍。等待外部交付的条件会单独标明，未知条件保持阻塞；图中若给出外部条件的相对位置，会说明它是规划假设。
-
-### 如何开始
-
-安装后，在对话中明确写出 `$project-planner`，并提供需求文档的路径，或者直接粘贴需求内容。例如：
+复制目录时请保留技能内隐藏的 `.gitattributes` 文件。它将三份指纹来源的 Git 检出换行固定为 LF；手动转成 CRLF 会使原始字节基线失效，即使文本内容未变。
 
 ```text
-使用 $project-planner，根据 docs/requirements.md 制定开发计划。
-最多安排两个任务同时开发，不需要具体日期。
-请生成甘特图和中文规划文档，并完成独立审查。
+python -X utf8 "<skill-dir>/scripts/localization.py" snapshot --language en --output "<temporary-dir>/project-planner-en-snapshot.json" --skill-dir "<skill-dir>"
+python -X utf8 "<skill-dir>/scripts/localization.py" snapshot --language zh-CN --output "<temporary-dir>/project-planner-zh-CN-snapshot.json" --skill-dir "<skill-dir>"
 ```
 
-这个技能需要你**显式调用**，不会仅因为对话中提到了项目规划就自动运行。如果你知道参与人数、可同时开展的任务数量或需要等待的外部条件，也可以一并说明。
+两个命令都必须成功退出并创建快照。任一命令失败，都表示安装副本的内置来源基线当前不可用；请报告失败，不要改写源哈希或审查证据。
 
-技能会先拆分任务、安排先后顺序，再生成图表和文档，最后交给独立子代理审查。对于暂时无法确定的条件，它会在计划中说明。例如，某项工作需要等待尚未交付的接口，就会标为等待状态；其他不受影响的任务仍可安排。
+## 使用技能
 
-### 结果怎么看
+提供需求文档并显式调用 `$project-planner`，例如：
 
-通常先看这两个文件就够了：
+```text
+使用 $project-planner，根据 docs/requirements.md 制定项目计划。
+最多安排两个普通任务同时开发，不需要具体日期。
+请生成甘特图并完成独立审查。
+```
 
-- **`gantt.html`：看整体安排。** 用浏览器打开，可以比较任务的相对工作量，查看并行安排和依赖关系；点击任务，还能看到交付内容、验收条件和 PR 范围。文件可离线查看。
-- **`plan.md`：看具体怎么做。** 这是一份中文规划文档，包含任务说明、完成标准、估算依据，以及需要注意的假设和风险。
+技能会在指定目录生成 `plan.md`、`schedule.json`、`gantt.svg`、`gantt.html` 和 `review.md`。可以先用浏览器打开 `gantt.html` 查看任务、依赖和详情，再读 `plan.md` 查看需求映射、假设、交付物、验收条件与估算。HTML 文件自包含，可离线查看。GitHub 会将其显示为源码；下载后用本地浏览器打开即可交互查看任务详情。
 
-此外，`gantt.svg` 是便于插入文档的静态甘特图，`review.md` 记录审查结论与发现的问题。`schedule.json` 保存任务和相对排程的数据，日常查看计划时不必阅读它。
+生成器需要 Python 3.10 或更高版本，并且只使用 Python 标准库。
 
-生成的计划和图表以中文呈现。以下是示例：
+产物语言按以下顺序确定：本次对计划的明确要求、正在更新的既有计划所记录的语言、已保存的技能默认语言、用户当前实质性请求的主要语言；若调用只有技能标记、没有实质性语言上下文，则使用英文。源文档、文件内容和零散外语词不决定对话语言；只有明显混合的实质内容导致目标不清楚时才询问。内置文案支持简体中文（`zh-CN`）和英文（`en`）；其他合法语言标签需要先准备完整、当前且通过语义核验的文案包，详见[本地化流程](project-planner/references/localization.md)。新安装的 `language: null` 不会触发开始时的询问。计划生成且完整审查通过后，技能可提示是否将本次实际使用的语言保存为默认值；只有用户明确要求才会保存，翻译文案也不会改变这个偏好。省略 `language` 的旧输入仍可使用，生成器会默认输出英文；没有文案快照的旧英文、中文输入仍兼容。技能流程会显式写入实际语言及计划本地文案快照。英文指令不会强制英文产物。
 
-![甘特图示例](demo/gantt.svg)
+技能配置还支持 `max_parallel` 和 `max_review_revisions` 默认值。新计划优先采用用户或项目明确给出的同时开发任务数（包括明确说明容量未知），其次才采用技能默认值；两者都未提供时记录容量未知，并展示不设容量上限的理论并行。`max_parallel` 限制的是计划中的普通任务，不限制代理或审查代理。更新既有计划时，除非用户要求更改，否则保留原容量。计划审查默认最多进行两轮初审后的完整修订与复审；即使设为 0，完整的初次独立审查仍必须执行。准备新语言文案有单独的上限：一次完整初审加最多两轮完整修订复审，不占用计划审查轮次。
 
-[阅读示例规划文档](demo/plan.md) · [获取交互式甘特图](demo/gantt.html)
+### 甘特图表示什么
 
-GitHub 会将 HTML 文件显示为源码。请下载 `gantt.html`，再用本地浏览器打开，即可查看图表和点击任务详情。
+图中 `T+0`、`T+1` 等位置只表达相对顺序。普通任务条长表示粗略相对工作量，一个单位不对应固定的小时或工作日，技能也不预测现实日历工期。估算时先选一个简单任务作为 1，再大致比较其他任务的工作量。
 
-### 使用前需要知道
+依赖表示交付门槛：前置工作完成开发、验收通过、PR 合并且接口或数据契约可用后，下游才能开始。共享人员、环境或其他互斥资源由资源锁表示。未知外部就绪条件会阻塞该事件及其后代；如填写已知相对位置，它只是规划假设，不是日历日期。其他不受影响的工作仍可排程。
 
-运行环境需要 Python 3.10 或更高版本，生成图表不需要额外安装 Python 库。完整审查还需要环境支持调用 `gpt-5.6-sol`、`high` 推理强度的独立子代理，并能查看实际渲染的图表。如果这些能力不可用，技能会明确说明审查尚未完成。
+### 独立审查
 
-计划会考虑任务依赖、可同时开展的任务数量，以及共用人员或环境造成的冲突。它提供一份可讨论、可调整的开发安排，不保证找到最优排布，也不会替你创建 PR 或开始编写项目代码。
+每份计划都要经过只读独立审查：使用 `gpt-6.1-sol`、`high` 推理强度、`fork_turns="none"`，并实际查看渲染后的甘特图与 HTML 详情。审查者会对照需求、计划输入、四种生成产物和 `locale-snapshot.json`，逐文件比对审查前、审查者所读、审查后三份 SHA-256。若指定模型、代理、视觉检查或哈希校验无法完成，结果会保留为待决草稿并说明原因。修订轮次上限不会关闭初次审查；每次修订都由新的独立子代理按相同完整范围复审。
+
+### 示例
+
+#### LabFlow：从需求到已审查计划
+
+从[已确认的项目需求](demo/labflow/requirements.md)和[实际测试指南](demo/labflow/test-guide.md)开始。该案例包含 36 项需求、并发与审批规则、最多三个并行普通任务、四项互斥资源，以及核心版本和外部接入两个交付阶段。
+
+在 HTML 甘特图中点击任务，可查看描述、交付物、验收标准、PR 边界、依赖、资源锁和估算依据；长详情可在弹窗内滚动。下图展示中文计划中的核心契约与领域设计任务：
+
+![LabFlow 中文任务详情：交付物、验收标准与相对工作量](https://raw.githubusercontent.com/zjy0481/Image/blank/labflow-detail-zh-cn-20261010T105107137Z.jpg)
+
+[演示入口](demo/labflow/README.md)列出每种语言的七份完整成果，包括已通过独立审查的[简体中文计划](demo/labflow/plan-zh-cn.md)和[英文独立计划](demo/labflow/plan-en.md)。文件分别使用 `-zh-cn` 和 `-en` 后缀；两个语言版本独立建模，不要求任务划分或估算一致。计划审查通过不表示虚构产品已经完成实施或业务验收。
+
+#### 小型示例
+
+简体中文示例：[规划文档](demo/plan.md) · [静态甘特图](demo/gantt.svg) · [交互式甘特图](demo/gantt.html)
+
+英文示例：[规划文档](demo/en/plan.md) · [静态甘特图](demo/en/gantt.svg) · [交互式甘特图](demo/en/gantt.html) · [排程数据](demo/en/schedule.json)
+
+日语示例：[规划文档](demo/ja/plan.md) · [交互式甘特图](demo/ja/gantt.html) · [已核验文案快照](demo/ja/locale-snapshot.json)
+
+GitHub 会把 HTML 显示为源码。请下载后用本地浏览器打开，以查看任务详情交互。
 
 <details>
 <summary>开发者：重建示例与运行测试</summary>
 
-在仓库根目录运行以下命令，可以根据已有的示例数据重新生成图表和规划文档，并运行测试。这只是检查生成工具，不会重新分析需求或调用 AI 审查。
+在仓库根目录运行以下命令，可根据已有输入重建产物并运行测试。生成器只读取输入文件，不会重新分析需求或调用 AI 审查。
 
 ```text
 python -X utf8 project-planner/scripts/build_plan.py tests/fixtures/plan.json --output .tmp/project-planner-example
 python -X utf8 -m unittest discover -s tests -v
 ```
 
-如果输出目录已有同名文件，且该文件不是本工具生成的，工具会拒绝覆盖。数据格式见[输入说明](project-planner/references/schema.md)，完整工作流程见[技能说明](project-planner/SKILL.md)。
+如果输出目录中有同名且非本工具生成的文件，生成器会拒绝覆盖。完整数据契约见[输入说明](project-planner/references/schema.md)，规划流程见[技能说明](project-planner/SKILL.md)。
 
 </details>

@@ -1,0 +1,286 @@
+{
+  "generator": "project-planner/build_plan.py",
+  "version": 1,
+  "language": "ja",
+  "title": "ローカル保存型 ToDo アプリケーション",
+  "summary": "永続保存、フィルター、安全な JSON インポート、プライバシー説明を備えたオフライン ToDo アプリを提供する。",
+  "unit": "相対作業量単位",
+  "assumptions": [
+    "ブラウザーが localStorage と File API をサポートする。",
+    "T1 を作業量 1 の基準とする。他の値は実装、テスト、レビュー、マージを含む概算作業量の比率である。"
+  ],
+  "risks": [
+    "プライバシーレビューの準備が相対位置 T+4 で整うと仮定する。条件が満たされない場合、依存タスクは待機する。暦上の期限を約束するものではない。",
+    "非常に大きなインポートファイルはブラウザーの応答性に影響する可能性がある。"
+  ],
+  "requirements": [
+    {
+      "id": "R1",
+      "text": "ToDo 項目の作成、完了、削除とローカル永続保存を実装する。",
+      "source": "requirements.md"
+    },
+    {
+      "id": "R2",
+      "text": "完了状態で ToDo 項目をフィルターする。",
+      "source": "requirements.md"
+    },
+    {
+      "id": "R3",
+      "text": "エラー時に既存データを損なわず、安全に JSON をインポートする。",
+      "source": "requirements.md"
+    },
+    {
+      "id": "R4",
+      "text": "プライバシーレビューとローカルデータ保存の説明を提供する。",
+      "source": "requirements.md"
+    }
+  ],
+  "max_parallel": 2,
+  "scheduling": {
+    "strategy": "deterministic_topological_list_scheduling",
+    "priority": "input_order",
+    "dependency_release": "finish",
+    "resource_semantics": "exact_string_exclusive_for_task_kind",
+    "capacity_semantics": "bounded_task_kind_only",
+    "optimality": "heuristic_not_globally_optimal",
+    "makespan": 6.0
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "データ契約を定義する",
+      "description": "ToDo エンティティ、保存形式のバージョン、インポート形式を定義する。",
+      "requirement_ids": [
+        "R1",
+        "R3"
+      ],
+      "duration": 1,
+      "depends_on": [],
+      "resources": [
+        "architecture"
+      ],
+      "deliverable": "バージョン付きデータ契約と例",
+      "acceptance": [
+        "フィールドと移行規則をテストする",
+        "不正な入力の扱いを定義する"
+      ],
+      "estimate_basis": "小規模な契約設計、単体テスト、レビュー",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "データ型、検証処理、契約テストのみ",
+      "input_index": 0,
+      "status": "scheduled",
+      "start": 0.0,
+      "finish": 1.0,
+      "blocked_by": []
+    },
+    {
+      "id": "T2",
+      "title": "ローカル保存を実装する",
+      "description": "作成、完了、削除と localStorage による永続保存を実装する。",
+      "requirement_ids": [
+        "R1"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "T1"
+      ],
+      "resources": [
+        "storage-schema"
+      ],
+      "deliverable": "ローカル保存アダプター",
+      "acceptance": [
+        "再読み込み後もデータを保持する",
+        "作成、完了、削除のテストが通る"
+      ],
+      "estimate_basis": "アダプター実装、移行テスト、レビュー",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "UI を含まない保存層とそのテスト",
+      "input_index": 1,
+      "status": "scheduled",
+      "start": 1.0,
+      "finish": 3.0,
+      "blocked_by": []
+    },
+    {
+      "id": "T3",
+      "title": "一覧とフィルターを構築する",
+      "description": "確定した T1 契約とメモリー上のモックを用いて作成、完了、削除と三つのフィルターを実装し、UI の PR を独立してレビュー・マージ可能にする。",
+      "requirement_ids": [
+        "R1",
+        "R2"
+      ],
+      "duration": 3,
+      "depends_on": [
+        "T1"
+      ],
+      "resources": [
+        "frontend-shell"
+      ],
+      "deliverable": "操作可能な ToDo 一覧",
+      "acceptance": [
+        "モックで作成、完了、削除が独立して動作する",
+        "三つのフィルターが正しく動作する",
+        "キーボードで操作できる"
+      ],
+      "estimate_basis": "コンポーネント、操作テスト、アクセシビリティ確認、レビュー",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "保存契約を変更しない一覧とフィルターの UI",
+      "input_index": 2,
+      "status": "scheduled",
+      "start": 1.0,
+      "finish": 4.0,
+      "blocked_by": []
+    },
+    {
+      "id": "T4",
+      "title": "JSON インポートを実装する",
+      "description": "ファイル全体を検証してからトランザクションとしてデータを書き込む。",
+      "requirement_ids": [
+        "R3"
+      ],
+      "duration": 2,
+      "depends_on": [
+        "T2"
+      ],
+      "resources": [
+        "storage-schema"
+      ],
+      "deliverable": "JSON インポート処理",
+      "acceptance": [
+        "不正ファイルに明確なメッセージを表示する",
+        "失敗時は既存データを変更しない"
+      ],
+      "estimate_basis": "ファイル読み込み、検証、ロールバックテスト、レビュー",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "インポートサービス、入口、エラー処理",
+      "input_index": 3,
+      "status": "scheduled",
+      "start": 3.0,
+      "finish": 5.0,
+      "blocked_by": []
+    },
+    {
+      "id": "E1",
+      "title": "外部プライバシーレビュー",
+      "description": "外部チームがローカルデータの説明とブラウザー保存の使用を確認する。",
+      "requirement_ids": [
+        "R4"
+      ],
+      "duration": 0,
+      "depends_on": [
+        "T2"
+      ],
+      "resources": [],
+      "deliverable": "プライバシーレビューの結論",
+      "acceptance": [
+        "結論を記録する"
+      ],
+      "estimate_basis": "T+4 の準備完了はシナリオ上の仮定であり、暦上の約束ではない",
+      "kind": "external",
+      "external_ready": 4,
+      "pr_scope": "コードの PR は作成せず、外部の結論を記録する",
+      "input_index": 4,
+      "status": "scheduled",
+      "start": 4.0,
+      "finish": 4.0,
+      "blocked_by": []
+    },
+    {
+      "id": "T5",
+      "title": "プライバシー説明を追加する",
+      "description": "外部レビューに基づいてアプリ内のプライバシー説明を組み込む。",
+      "requirement_ids": [
+        "R4"
+      ],
+      "duration": 1,
+      "depends_on": [
+        "E1",
+        "T3"
+      ],
+      "resources": [
+        "frontend-shell"
+      ],
+      "deliverable": "アプリ内のプライバシー説明",
+      "acceptance": [
+        "文案がレビュー結論と一致する",
+        "説明にアクセスできる"
+      ],
+      "estimate_basis": "文案の組み込み、UI テスト、レビュー",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "プライバシー説明ページと入口",
+      "input_index": 5,
+      "status": "scheduled",
+      "start": 4.0,
+      "finish": 5.0,
+      "blocked_by": []
+    },
+    {
+      "id": "T6",
+      "title": "エンドツーエンド受け入れを完了する",
+      "description": "T3 の UI と T2 の実際の保存アダプターを接続し、保存、フィルター、インポート、プライバシー説明を確認する。",
+      "requirement_ids": [
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "duration": 1,
+      "depends_on": [
+        "T3",
+        "T4",
+        "T5"
+      ],
+      "resources": [
+        "release-env"
+      ],
+      "deliverable": "統合アプリケーションと受け入れ記録",
+      "acceptance": [
+        "UI が実際の保存層で作成、再読み込み、完了、削除を行う",
+        "主要な処理がすべて通る",
+        "作業を阻む不具合が残っていない"
+      ],
+      "estimate_basis": "エンドツーエンド実行、不具合検証、レビュー",
+      "kind": "task",
+      "external_ready": null,
+      "pr_scope": "UI と保存層の統合、エンドツーエンドテスト、リリース確認",
+      "input_index": 6,
+      "status": "scheduled",
+      "start": 5.0,
+      "finish": 6.0,
+      "blocked_by": []
+    },
+    {
+      "id": "M1",
+      "title": "リリース準備完了",
+      "description": "すべての受け入れ作業が完了した後のリリースマイルストーン。",
+      "requirement_ids": [],
+      "duration": 0,
+      "depends_on": [
+        "T6"
+      ],
+      "resources": [],
+      "deliverable": "リリース判断",
+      "acceptance": [
+        "T6 が完了している"
+      ],
+      "estimate_basis": "作業量ゼロの判断ゲート",
+      "kind": "milestone",
+      "external_ready": null,
+      "pr_scope": "独立した PR は作成しない",
+      "input_index": 7,
+      "status": "scheduled",
+      "start": 6.0,
+      "finish": 6.0,
+      "blocked_by": []
+    }
+  ],
+  "localization": {
+    "snapshot": "locale-snapshot.json",
+    "messages_sha256": "d737017e31e58344e9e7f81984477d0c57c898b2e0c0c08983536f29850ae32d"
+  }
+}

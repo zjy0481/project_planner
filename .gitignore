@@ -7,3 +7,6 @@ __pycache__/
 /PAUSED.md
 /demo/review*.md
 /demo/review-snapshot*.json
+/demo/en/review*.md
+/.tmp/
+/project-planner/user-locales/

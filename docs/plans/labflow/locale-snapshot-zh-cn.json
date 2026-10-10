@@ -1,0 +1,352 @@
+{
+  "generator": "project-planner/localization",
+  "version": 1,
+  "language": "zh-CN",
+  "messages": {
+    "unit": "相对工作单位",
+    "none": "无",
+    "list_separator": "、",
+    "no_description": "无描述",
+    "no_deliverable": "无交付物描述",
+    "plan_title": "项目计划",
+    "title": "标题",
+    "summary": "摘要",
+    "workload_unit": "工作量单位",
+    "capacity": "并行容量",
+    "capacity_unknown": "未知；排程按无容量上限处理",
+    "capacity_unknown_short": "未知（按无上限排程）",
+    "workload_note": "任务工作量为粗略估算；T+N 表示相对位置，不换算为小时、工作日或实际工期。普通任务条长表示工作量；阻塞任务的整行条纹只表示状态。",
+    "scheduling_note": "排程使用输入任务顺序作为稳定优先级，依赖在前置任务结束时释放；结果是确定性的列表调度，不保证全局最优。",
+    "assumptions": "假设",
+    "risks": "风险",
+    "requirements": "需求",
+    "requirement": "需求",
+    "source": "来源",
+    "coverage": "覆盖任务",
+    "requirement_mapping": "需求映射",
+    "schedule": "相对工作量排程",
+    "task": "任务",
+    "type": "类型",
+    "start": "相对起点",
+    "finish": "相对终点",
+    "workload": "工作量",
+    "dependencies": "依赖",
+    "resources": "资源",
+    "status": "状态",
+    "task_details": "任务详情",
+    "description": "描述",
+    "deliverable": "交付物",
+    "acceptance": "验收标准",
+    "pr_scope": "PR 边界",
+    "estimate_basis": "估算依据",
+    "resource_locks": "资源锁",
+    "scheduled": "已排程",
+    "blocked": "阻塞",
+    "blocked_reason": "阻塞（外部条件待确认：{items}）",
+    "chart_title": "项目甘特图",
+    "chart_desc": "{title}。条长表示粗略相对工作量，横轴只表示抽象相对顺序，不对应现实时间；阻塞任务没有虚构相对偏移。",
+    "chart_caption": "工作量单位：{unit} · 条长=粗略工作量",
+    "axis_caption": "横轴=相对位置 · 不代表实际工期",
+    "legend_task": "任务（条长=工作量）",
+    "legend_milestone": "里程碑",
+    "legend_external": "外部项",
+    "legend_blocked": "阻塞状态（整行背景）",
+    "blocked_label": "阻塞：外部条件待确认（{items}）",
+    "blocked_count": "{count} 个任务因外部条件待确认而阻塞",
+    "schedule_span": "相对排程跨度：{finish}",
+    "arrow_note": "箭头表示依赖关系；依赖在前置任务完成后才释放。",
+    "empty_requirements": "无需求",
+    "close": "关闭",
+    "completion_blocked": "可排程相对终点 {finish}，整体相对终点未知",
+    "completion": "相对终点 {finish}",
+    "kind_task": "任务",
+    "kind_milestone": "里程碑",
+    "kind_external": "外部项"
+  },
+  "source_hashes": {
+    "en": "a44e544680c78e9f65751ed1394eca64fbab890a91b6405cc3f6a0763cae7dd2",
+    "zh-CN": "8bb60255bf9b95ac0883186d127da3510e3252a34cbefe3bc49c046a7c7bf3f5",
+    "context": "43eabce0b27589d6ae6ed4dd4755c179ea0d59425206272d686a6a7fa7a84bdd"
+  },
+  "messages_sha256": "a6c2fc8abfad863323b05e0c2f2dce903ee4715242add339d8a646c5d710cf2f",
+  "semantic_review": {
+    "status": "PASS",
+    "per_key": {
+      "unit": {
+        "status": "PASS",
+        "evidence": "EN “relative work units” 对应 ZH“相对工作单位”；两者都表示相对工作量单位，不暗示小时或日历工期，作为工作量单位标签使用。"
+      },
+      "none": {
+        "status": "PASS",
+        "evidence": "EN“None”与 ZH“无”都表示没有值；两者用于空列表及缺失字段的占位显示。"
+      },
+      "list_separator": {
+        "status": "PASS",
+        "evidence": "EN 用“, ”分隔列表，ZH 用中文顿号“、”；两者都只承担列表分隔作用，适用于需求、依赖及资源列表。"
+      },
+      "no_description": {
+        "status": "PASS",
+        "evidence": "EN“No description”与 ZH“无描述”都表示任务描述缺失；该键用于 Markdown 任务详情的空描述回退。"
+      },
+      "no_deliverable": {
+        "status": "PASS",
+        "evidence": "EN“No deliverable description”与 ZH“无交付物描述”都表示图表行没有交付物说明，不会把“无交付物”误写成“有交付物”。"
+      },
+      "plan_title": {
+        "status": "PASS",
+        "evidence": "EN“Project plan”对应 ZH“项目计划”；两者都是整体计划标题，用作 Markdown 一级标题。"
+      },
+      "title": {
+        "status": "PASS",
+        "evidence": "EN“Title”对应 ZH“标题”；两者都是计划标题字段的标签。"
+      },
+      "summary": {
+        "status": "PASS",
+        "evidence": "EN“Summary”对应 ZH“摘要”；两者都是计划摘要字段的标签。"
+      },
+      "workload_unit": {
+        "status": "PASS",
+        "evidence": "EN“Workload unit”对应 ZH“工作量单位”；两者都标注工作量单位字段。"
+      },
+      "capacity": {
+        "status": "PASS",
+        "evidence": "EN“Parallel capacity”对应 ZH“并行容量”；两者指并行任务容量，不与代理并发混为一谈。"
+      },
+      "capacity_unknown": {
+        "status": "PASS",
+        "evidence": "EN 表示容量未知且按无容量限制排程；ZH“未知；排程按无容量上限处理”保留未知状态和无上限排程处理方式。"
+      },
+      "capacity_unknown_short": {
+        "status": "PASS",
+        "evidence": "EN“Unknown (unbounded scheduling)”对应 ZH“未知（按无上限排程）”；短标签保留容量未知及排程不设上限两层意思。"
+      },
+      "workload_note": {
+        "status": "PASS",
+        "evidence": "EN 保留工作量近似、T+N 只表示相对位置而非小时/工作日/日历时长、任务条长表示工作量、整行斜纹只表示阻塞状态；ZH 分别表达粗略估算、不换算为实际工期、普通任务条长表示工作量及阻塞行条纹只表示状态。"
+      },
+      "scheduling_note": {
+        "status": "PASS",
+        "evidence": "EN 与 ZH 都说明按输入任务顺序作稳定优先级、前置工作结束后释放依赖、列表调度结果确定但不保证全局最优；条件和“不保证”限制均保留。"
+      },
+      "assumptions": {
+        "status": "PASS",
+        "evidence": "EN“Assumptions”对应 ZH“假设”；用于计划假设章节标题。"
+      },
+      "risks": {
+        "status": "PASS",
+        "evidence": "EN“Risks”对应 ZH“风险”；用于计划风险章节标题。"
+      },
+      "requirements": {
+        "status": "PASS",
+        "evidence": "EN“Requirements”对应 ZH“需求”；用于任务详情中的需求列表标签，复数集合语境一致。"
+      },
+      "requirement": {
+        "status": "PASS",
+        "evidence": "EN“Requirement”对应 ZH“需求”；用于需求映射表单条需求列标题。"
+      },
+      "source": {
+        "status": "PASS",
+        "evidence": "EN“Source”对应 ZH“来源”；用于需求映射表中每项需求的来源列。"
+      },
+      "coverage": {
+        "status": "PASS",
+        "evidence": "EN“Covering tasks”对应 ZH“覆盖任务”；在需求映射表中列出覆盖该需求的任务 ID，表头与列内容语义相符。"
+      },
+      "requirement_mapping": {
+        "status": "PASS",
+        "evidence": "EN“Requirement mapping”对应 ZH“需求映射”；两者都是需求与任务覆盖关系的章节标题。"
+      },
+      "schedule": {
+        "status": "PASS",
+        "evidence": "EN“Relative workload schedule”对应 ZH“相对工作量排程”；均明确是相对工作量排程，用于表格及 HTML 元信息标签。"
+      },
+      "task": {
+        "status": "PASS",
+        "evidence": "EN“Task”对应 ZH“任务”；用于计划表中的任务列标题。"
+      },
+      "type": {
+        "status": "PASS",
+        "evidence": "EN“Type”对应 ZH“类型”；两者都标注任务、里程碑或外部项的类别。"
+      },
+      "start": {
+        "status": "PASS",
+        "evidence": "EN“Relative start”对应 ZH“相对起点”；均表示相对轴上的开始位置，而非现实开始日期。"
+      },
+      "finish": {
+        "status": "PASS",
+        "evidence": "EN“Relative finish”对应 ZH“相对终点”；均表示相对轴上的结束位置，而非现实完成日期。"
+      },
+      "workload": {
+        "status": "PASS",
+        "evidence": "EN“Workload”对应 ZH“工作量”；用于列/详情标签，不把工作量误称为经过的时间。"
+      },
+      "dependencies": {
+        "status": "PASS",
+        "evidence": "EN“Dependencies”对应 ZH“依赖”；用于任务依赖列表及表头。"
+      },
+      "resources": {
+        "status": "PASS",
+        "evidence": "EN“Resources”对应 ZH“资源”；用于任务所用资源列表，和依赖字段分开显示。"
+      },
+      "status": {
+        "status": "PASS",
+        "evidence": "EN“Status”对应 ZH“状态”；用于任务状态列及详情字段。"
+      },
+      "task_details": {
+        "status": "PASS",
+        "evidence": "EN“Task details”对应 ZH“任务详情”；均引出逐任务详情区。"
+      },
+      "description": {
+        "status": "PASS",
+        "evidence": "EN“Description”对应 ZH“描述”；用于详情中的描述字段标签。"
+      },
+      "deliverable": {
+        "status": "PASS",
+        "evidence": "EN“Deliverable”对应 ZH“交付物”；用于任务详情字段，未与描述或验收标准混淆。"
+      },
+      "acceptance": {
+        "status": "PASS",
+        "evidence": "EN“Acceptance criteria”对应 ZH“验收标准”；都指验收条件/标准列表。"
+      },
+      "pr_scope": {
+        "status": "PASS",
+        "evidence": "EN“PR scope”对应 ZH“PR 边界”；都标注该任务 PR 所含工作范围，在详情字段中使用。"
+      },
+      "estimate_basis": {
+        "status": "PASS",
+        "evidence": "EN“Estimate basis”对应 ZH“估算依据”；都表示任务估算的依据。"
+      },
+      "resource_locks": {
+        "status": "PASS",
+        "evidence": "EN“Resource locks”对应 ZH“资源锁”；在详情中单独列出互斥资源锁，与普通依赖列表和资源标签分开。"
+      },
+      "scheduled": {
+        "status": "PASS",
+        "evidence": "EN“Scheduled”对应 ZH“已排程”；作为人可读状态标签出现，协议状态值仍由数据中的 scheduled 保持。"
+      },
+      "blocked": {
+        "status": "PASS",
+        "evidence": "EN“Blocked”对应 ZH“阻塞”；作为人可读阻塞状态标签出现，协议状态值仍由数据中的 blocked 保持。"
+      },
+      "blocked_reason": {
+        "status": "PASS",
+        "evidence": "EN 表示“Blocked (external readiness unknown: {items})”；ZH“阻塞（外部条件待确认：{items}）”保留阻塞、外部就绪未知/待确认及项目列表；两边占位符均为 {items}，用于阻塞来源列表。"
+      },
+      "chart_title": {
+        "status": "PASS",
+        "evidence": "EN“Project Gantt chart”对应 ZH“项目甘特图”；用作 SVG 图表标题及 HTML 图表区域无障碍标签。"
+      },
+      "chart_desc": {
+        "status": "PASS",
+        "evidence": "EN 与 ZH 都说明条长是粗略相对工作量、横轴是抽象相对顺序而非日历时间、阻塞任务没有虚构相对偏移；{title} 在两种语言中均插入计划标题。"
+      },
+      "chart_caption": {
+        "status": "PASS",
+        "evidence": "EN 与 ZH 都标注工作量单位并说明条长对应粗略工作量；{unit} 在两种语言中均插入单位。"
+      },
+      "axis_caption": {
+        "status": "PASS",
+        "evidence": "EN“relative position / no calendar duration”对应 ZH“相对位置 / 不代表实际工期”；两者都限制横轴为相对位置，不给出现实工期承诺。"
+      },
+      "legend_task": {
+        "status": "PASS",
+        "evidence": "EN“Task (bar length = workload)”对应 ZH“任务（条长=工作量）”；图例将任务条长与工作量对应。"
+      },
+      "legend_milestone": {
+        "status": "PASS",
+        "evidence": "EN“Milestone”对应 ZH“里程碑”；图例类型准确区别于任务和外部项。"
+      },
+      "legend_external": {
+        "status": "PASS",
+        "evidence": "EN“External item”对应 ZH“外部项”；图例保留独立外部类别，与任务、里程碑及资源锁区别。"
+      },
+      "legend_blocked": {
+        "status": "PASS",
+        "evidence": "EN“Blocked state (row background)”对应 ZH“阻塞状态（整行背景）”；图例说明整行背景表示阻塞状态。"
+      },
+      "blocked_label": {
+        "status": "PASS",
+        "evidence": "EN 表示阻塞且外部就绪状态未知；ZH“阻塞：外部条件待确认”保留阻塞及未确认条件；{items} 在两边都插入相关外部项。"
+      },
+      "blocked_count": {
+        "status": "PASS",
+        "evidence": "EN“{count} tasks blocked by unknown external readiness”对应 ZH“{count} 个任务因外部条件待确认而阻塞”；数量仍指被阻塞任务数，{count} 用途一致。"
+      },
+      "schedule_span": {
+        "status": "PASS",
+        "evidence": "EN“Relative schedule span: {finish}”对应 ZH“相对排程跨度：{finish}”；均以相对终点填充跨度值，{finish} 用途一致。"
+      },
+      "arrow_note": {
+        "status": "PASS",
+        "evidence": "EN 说箭头表示依赖在完成后释放；ZH 说箭头表示依赖关系且依赖在前置任务完成后才释放，依赖门槛和箭头含义均保留。"
+      },
+      "empty_requirements": {
+        "status": "PASS",
+        "evidence": "EN“No requirements”对应 ZH“无需求”；用于需求表为空时的单元格提示。"
+      },
+      "close": {
+        "status": "PASS",
+        "evidence": "EN“Close”对应 ZH“关闭”；均为关闭详情弹窗的按钮文字。"
+      },
+      "completion_blocked": {
+        "status": "PASS",
+        "evidence": "EN 表示可排程部分的相对终点并明确整体相对终点未知；ZH“可排程相对终点 {finish}，整体相对终点未知”保留两部分及不确定性，{finish} 用于可排程终点。"
+      },
+      "completion": {
+        "status": "PASS",
+        "evidence": "EN“Relative finish {finish}”对应 ZH“相对终点 {finish}”；均只报告相对终点，{finish} 用途一致。"
+      },
+      "kind_task": {
+        "status": "PASS",
+        "evidence": "EN“Task”对应 ZH“任务”；用于类型显示，保留任务类别。"
+      },
+      "kind_milestone": {
+        "status": "PASS",
+        "evidence": "EN“Milestone”对应 ZH“里程碑”；用于类型显示，保留里程碑类别。"
+      },
+      "kind_external": {
+        "status": "PASS",
+        "evidence": "EN“External item”对应 ZH“外部项”；用于类型显示，保留独立外部类别，与任务和里程碑区分。"
+      }
+    },
+    "reviewer": {
+      "identity": "Subagent /root/baseline_fixes_semantics (gpt-6-luna/max)",
+      "fork_turns": "none"
+    },
+    "hashes": {
+      "before": {
+        "source_hashes": {
+          "en": "a44e544680c78e9f65751ed1394eca64fbab890a91b6405cc3f6a0763cae7dd2",
+          "zh-CN": "8bb60255bf9b95ac0883186d127da3510e3252a34cbefe3bc49c046a7c7bf3f5",
+          "context": "43eabce0b27589d6ae6ed4dd4755c179ea0d59425206272d686a6a7fa7a84bdd"
+        },
+        "messages_sha256": {
+          "en": "2902e1a4a6abab0e6eda1534e820f67bcd795489c499d20d63158401d6efad34",
+          "zh-CN": "a6c2fc8abfad863323b05e0c2f2dce903ee4715242add339d8a646c5d710cf2f"
+        }
+      },
+      "read": {
+        "source_hashes": {
+          "en": "a44e544680c78e9f65751ed1394eca64fbab890a91b6405cc3f6a0763cae7dd2",
+          "zh-CN": "8bb60255bf9b95ac0883186d127da3510e3252a34cbefe3bc49c046a7c7bf3f5",
+          "context": "43eabce0b27589d6ae6ed4dd4755c179ea0d59425206272d686a6a7fa7a84bdd"
+        },
+        "messages_sha256": {
+          "en": "2902e1a4a6abab0e6eda1534e820f67bcd795489c499d20d63158401d6efad34",
+          "zh-CN": "a6c2fc8abfad863323b05e0c2f2dce903ee4715242add339d8a646c5d710cf2f"
+        }
+      },
+      "after": {
+        "source_hashes": {
+          "en": "a44e544680c78e9f65751ed1394eca64fbab890a91b6405cc3f6a0763cae7dd2",
+          "zh-CN": "8bb60255bf9b95ac0883186d127da3510e3252a34cbefe3bc49c046a7c7bf3f5",
+          "context": "43eabce0b27589d6ae6ed4dd4755c179ea0d59425206272d686a6a7fa7a84bdd"
+        },
+        "messages_sha256": {
+          "en": "2902e1a4a6abab0e6eda1534e820f67bcd795489c499d20d63158401d6efad34",
+          "zh-CN": "a6c2fc8abfad863323b05e0c2f2dce903ee4715242add339d8a646c5d710cf2f"
+        }
+      }
+    }
+  }
+}
