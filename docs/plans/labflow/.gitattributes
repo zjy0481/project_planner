@@ -1,0 +1,2 @@
+# Preserve the original reviewed Chinese artifacts byte-for-byte.
+*-zh-cn.* -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

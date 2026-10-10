@@ -1,0 +1,38 @@
+[
+  {
+    "file": "labflow-gantt-en.jpg",
+    "url": "https://raw.githubusercontent.com/zjy0481/Image/blank/labflow-gantt-en-20261010T105107137Z.jpg",
+    "sha256": "61cd0d1009e0da30367dd2a64c7c4efccd4a7a7195e4f0975d13018be79ded61",
+    "source_html": "gantt-en.html",
+    "source_html_sha256": "7d4ed15f3ae403c5229a703291ad7c98b34ab00cc7105ce0f10f45bee1bdf565",
+    "picgo_profile": "project planner",
+    "capture": "Actual browser screenshot; overview shows the beginning of the full chart; details dialog is scrollable."
+  },
+  {
+    "file": "labflow-detail-en.jpg",
+    "url": "https://raw.githubusercontent.com/zjy0481/Image/blank/labflow-detail-en-20261010T105107137Z.jpg",
+    "sha256": "8a9337d2b0dfdd2b3a6b7e540da529c708e5b52155d5ff6c734133a6b96dc83e",
+    "source_html": "gantt-en.html",
+    "source_html_sha256": "7d4ed15f3ae403c5229a703291ad7c98b34ab00cc7105ce0f10f45bee1bdf565",
+    "picgo_profile": "project planner",
+    "capture": "Actual browser screenshot; overview shows the beginning of the full chart; details dialog is scrollable."
+  },
+  {
+    "file": "labflow-gantt-zh-cn.jpg",
+    "url": "https://raw.githubusercontent.com/zjy0481/Image/blank/labflow-gantt-zh-cn-20261010T105107137Z.jpg",
+    "sha256": "cb7561956e3ce962414a7b8166f54c0130c6ea35e77a47cfa3d382ea145898f6",
+    "source_html": "gantt-zh-cn.html",
+    "source_html_sha256": "0b292f26b28b01bd639765961467c4c6a4515899e266ed4631f964f7ac8d8c9d",
+    "picgo_profile": "project planner",
+    "capture": "Actual browser screenshot; overview shows the beginning of the full chart; details dialog is scrollable."
+  },
+  {
+    "file": "labflow-detail-zh-cn.jpg",
+    "url": "https://raw.githubusercontent.com/zjy0481/Image/blank/labflow-detail-zh-cn-20261010T105107137Z.jpg",
+    "sha256": "8e65283e149e4f6edac0994e7aaa87c8d5a8b5b8991a9e47bb2d8b4a201900f7",
+    "source_html": "gantt-zh-cn.html",
+    "source_html_sha256": "0b292f26b28b01bd639765961467c4c6a4515899e266ed4631f964f7ac8d8c9d",
+    "picgo_profile": "project planner",
+    "capture": "Actual browser screenshot; overview shows the beginning of the full chart; details dialog is scrollable."
+  }
+]
