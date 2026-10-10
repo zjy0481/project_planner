@@ -4,14 +4,24 @@
 
 English: [README.md](README.md)
 
+## 效果预览
+
+LabFlow 是一个虚构的共享实验室设备预约与运维平台。下图来自已通过独立审查的简体中文计划；完整演示同时提供原始需求、计划输入、排程数据、文案快照和审查记录。
+
+[![LabFlow 中文甘特图预览：相对工作量、并行容量与依赖门槛](https://raw.githubusercontent.com/zjy0481/Image/blank/labflow-gantt-zh-cn-20261010T105107137Z.jpg)](demo/labflow/gantt-zh-cn.svg)
+
+[中文项目计划](demo/labflow/plan-zh-cn.md) · [交互式甘特图](demo/labflow/gantt-zh-cn.html) · [完整 SVG 图](demo/labflow/gantt-zh-cn.svg) · [审查记录](demo/labflow/review-zh-cn.md) · [全部演示文件](demo/labflow/README.md)
+
+图片展示甘特图的起始部分。条长表示粗略相对工作量，`T+N` 不对应现实日历时间。企业身份系统就绪时间未知，其真实接入与阶段 B 放行保持阻塞，阶段 A 可独立推进。下载自包含 HTML 并在本地打开，即可查看完整排程和任务详情。
+
 ## 安装技能
 
-通过 AI 安装时，请从[源仓库](https://github.com/zjy0481/project_management/tree/dev/project-planner)的 `dev` 分支安装，并且只安装其中的 `project-planner` 目录。不要假设 `main` 分支包含此技能。
+通过 AI 安装时，请从[源仓库](https://github.com/zjy0481/project_planner/tree/dev/project-planner)的 `dev` 分支安装，并且只安装其中的 `project-planner` 目录。不要假设 `main` 分支包含此技能。
 
 优先使用已安装的 `$skill-installer`，并传入以下完整 URL：
 
 ```text
-https://github.com/zjy0481/project_management/tree/dev/project-planner
+https://github.com/zjy0481/project_planner/tree/dev/project-planner
 ```
 
 URL 中的 `/tree/dev/` 不可省略；省略后安装器可能选用默认分支。若需手动安装，请将完整技能目录复制到以下一个作用域：
@@ -68,6 +78,18 @@ python -X utf8 "<skill-dir>/scripts/localization.py" snapshot --language zh-CN -
 每份计划都要经过只读独立审查：使用 `gpt-6.1-sol`、`high` 推理强度、`fork_turns="none"`，并实际查看渲染后的甘特图与 HTML 详情。审查者会对照需求、计划输入、四种生成产物和 `locale-snapshot.json`，逐文件比对审查前、审查者所读、审查后三份 SHA-256。若指定模型、代理、视觉检查或哈希校验无法完成，结果会保留为待决草稿并说明原因。修订轮次上限不会关闭初次审查；每次修订都由新的独立子代理按相同完整范围复审。
 
 ### 示例
+
+#### LabFlow：从需求到已审查计划
+
+从[已确认的项目需求](demo/labflow/requirements.md)和[实际测试指南](demo/labflow/test-guide.md)开始。该案例包含 36 项需求、并发与审批规则、最多三个并行普通任务、四项互斥资源，以及核心版本和外部接入两个交付阶段。
+
+在 HTML 甘特图中点击任务，可查看描述、交付物、验收标准、PR 边界、依赖、资源锁和估算依据；长详情可在弹窗内滚动。下图展示中文计划中的核心契约与领域设计任务：
+
+![LabFlow 中文任务详情：交付物、验收标准与相对工作量](https://raw.githubusercontent.com/zjy0481/Image/blank/labflow-detail-zh-cn-20261010T105107137Z.jpg)
+
+[演示入口](demo/labflow/README.md)列出每种语言的七份完整成果，包括已通过独立审查的[简体中文计划](demo/labflow/plan-zh-cn.md)和[英文独立计划](demo/labflow/plan-en.md)。文件分别使用 `-zh-cn` 和 `-en` 后缀；两个语言版本独立建模，不要求任务划分或估算一致。计划审查通过不表示虚构产品已经完成实施或业务验收。
+
+#### 小型示例
 
 简体中文示例：[规划文档](demo/plan.md) · [静态甘特图](demo/gantt.svg) · [交互式甘特图](demo/gantt.html)
 

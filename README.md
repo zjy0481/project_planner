@@ -4,14 +4,24 @@ An explicitly invoked Codex skill that turns requirements into independently rev
 
 简体中文：[README.zh-CN.md](README.zh-CN.md)
 
+## Preview
+
+LabFlow is a fictional shared-laboratory booking and operations platform. This preview comes from the independently generated, reviewed English plan. The full demo includes the original requirements, planning inputs, schedules, locale snapshots, and review records.
+
+[![English LabFlow Gantt preview: relative workload, parallel capacity, and dependency gates](https://raw.githubusercontent.com/zjy0481/Image/blank/labflow-gantt-en-20261010T105107137Z.jpg)](demo/labflow/gantt-en.svg)
+
+[English project plan](demo/labflow/plan-en.md) · [Interactive Gantt chart](demo/labflow/gantt-en.html) · [Full SVG chart](demo/labflow/gantt-en.svg) · [Review record](demo/labflow/review-en.md) · [All demo files](demo/labflow/README.md)
+
+The image shows the beginning of the chart. Bars represent rough relative workload; `T+N` is not calendar time. Unknown enterprise identity readiness blocks the real integration and release B, while release A can proceed independently. Download the self-contained HTML and open it locally to explore the full chart and task details.
+
 ## Install the skill
 
-For AI-assisted installation, use the `dev` branch and install only the `project-planner` directory from [the source repository](https://github.com/zjy0481/project_management/tree/dev/project-planner). Do not assume `main` contains this skill.
+For AI-assisted installation, use the `dev` branch and install only the `project-planner` directory from [the source repository](https://github.com/zjy0481/project_planner/tree/dev/project-planner). Do not assume `main` contains this skill.
 
 Prefer the installed `$skill-installer` and pass this exact URL:
 
 ```text
-https://github.com/zjy0481/project_management/tree/dev/project-planner
+https://github.com/zjy0481/project_planner/tree/dev/project-planner
 ```
 
 The `/tree/dev/` segment matters because omitting it may select the installer's default branch. If manual installation is necessary, copy the complete skill directory to one chosen scope:
@@ -66,6 +76,18 @@ Dependencies show delivery gates. A dependent task waits until its prerequisite 
 Every generated plan receives an independent read-only review using `gpt-6.1-sol` at `high` reasoning effort, with `fork_turns="none"`, plus actual visual inspection of the rendered Gantt chart and HTML details. The reviewer checks the source requirements, plan input, four generated outputs, and `locale-snapshot.json` against matching pre-review, reviewer-read, and post-review SHA-256 values. If the model, agent, visual inspection, or hash check is unavailable or fails, the result remains a draft and is reported as incomplete. The review limit never disables the initial review. A full repair review uses a new independent subagent and covers the same complete scope.
 
 ### Examples
+
+#### LabFlow: requirements to a reviewed plan
+
+Start with the [approved requirements](demo/labflow/requirements.md) and [test guide](demo/labflow/test-guide.md). This case includes 36 requirements, concurrency and approval rules, three concurrent ordinary tasks, four exclusive resources, and separate core and external-integration releases.
+
+Click a task in the HTML chart to inspect its description, deliverable, acceptance criteria, PR scope, dependencies, resource locks, and estimate basis. Long details scroll within the dialog. This screenshot shows the English plan's persistence-design task:
+
+![English LabFlow task detail: deliverable, acceptance criteria, and relative workload](https://raw.githubusercontent.com/zjy0481/Image/blank/labflow-detail-en-20261010T105107137Z.jpg)
+
+The [demo index](demo/labflow/README.md) links all seven artifacts for each language, including the reviewed [Simplified Chinese plan](demo/labflow/plan-zh-cn.md) and independently generated [English plan](demo/labflow/plan-en.md). Filenames use `-zh-cn` and `-en`; the language examples need not share task boundaries or estimates. Planning review PASS does not mean that the fictional product has been implemented or accepted.
+
+#### Smaller examples
 
 The Chinese sample plan and chart are in [`demo/`](demo/). The English sample is in [`demo/en/`](demo/en/):
 
