@@ -8,7 +8,7 @@ An explicitly invoked Codex skill that turns requirements into independently rev
 
 LabFlow is a fictional shared-laboratory booking and operations platform. This preview comes from the independently generated, reviewed English plan. The full demo includes the original requirements, planning inputs, schedules, locale snapshots, and review records.
 
-[![English LabFlow Gantt preview: relative workload, parallel capacity, and dependency gates](https://raw.githubusercontent.com/zjy0481/Image/blank/labflow-gantt-en-20261010T105107137Z.jpg)](demo/labflow/gantt-en.svg)
+[![English LabFlow Gantt preview: relative workload, parallel capacity, and dependency gates](https://raw.githubusercontent.com/zjy0481/Image/project-planner/labflow-gantt-en-rehost-20261024-f4ba59bc.jpg)](demo/labflow/gantt-en.svg)
 
 [English project plan](demo/labflow/plan-en.md) · [Interactive Gantt chart](demo/labflow/gantt-en.html) · [Full SVG chart](demo/labflow/gantt-en.svg) · [Review record](demo/labflow/review-en.md) · [All demo files](demo/labflow/README.md)
 
@@ -83,7 +83,7 @@ Start with the [approved requirements](demo/labflow/requirements.md) and [test g
 
 Click a task in the HTML chart to inspect its description, deliverable, acceptance criteria, PR scope, dependencies, resource locks, and estimate basis. Long details scroll within the dialog. This screenshot shows the English plan's persistence-design task:
 
-![English LabFlow task detail: deliverable, acceptance criteria, and relative workload](https://raw.githubusercontent.com/zjy0481/Image/blank/labflow-detail-en-20261010T105107137Z.jpg)
+![English LabFlow task detail: deliverable, acceptance criteria, and relative workload](https://raw.githubusercontent.com/zjy0481/Image/project-planner/labflow-detail-en-rehost-20261024-f4ba59bc.jpg)
 
 The [demo index](demo/labflow/README.md) links all seven artifacts for each language, including the reviewed [Simplified Chinese plan](demo/labflow/plan-zh-cn.md) and independently generated [English plan](demo/labflow/plan-en.md). Filenames use `-zh-cn` and `-en`; the language examples need not share task boundaries or estimates. Planning review PASS does not mean that the fictional product has been implemented or accepted.
 

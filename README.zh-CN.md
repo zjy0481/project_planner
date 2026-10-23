@@ -8,7 +8,7 @@ English: [README.md](README.md)
 
 LabFlow 是一个虚构的共享实验室设备预约与运维平台。下图来自已通过独立审查的简体中文计划；完整演示同时提供原始需求、计划输入、排程数据、文案快照和审查记录。
 
-[![LabFlow 中文甘特图预览：相对工作量、并行容量与依赖门槛](https://raw.githubusercontent.com/zjy0481/Image/blank/labflow-gantt-zh-cn-20261010T105107137Z.jpg)](demo/labflow/gantt-zh-cn.svg)
+[![LabFlow 中文甘特图预览：相对工作量、并行容量与依赖门槛](https://raw.githubusercontent.com/zjy0481/Image/project-planner/labflow-gantt-zh-cn-rehost-20261024-f4ba59bc.jpg)](demo/labflow/gantt-zh-cn.svg)
 
 [中文项目计划](demo/labflow/plan-zh-cn.md) · [交互式甘特图](demo/labflow/gantt-zh-cn.html) · [完整 SVG 图](demo/labflow/gantt-zh-cn.svg) · [审查记录](demo/labflow/review-zh-cn.md) · [全部演示文件](demo/labflow/README.md)
 
@@ -85,7 +85,7 @@ python -X utf8 "<skill-dir>/scripts/localization.py" snapshot --language zh-CN -
 
 在 HTML 甘特图中点击任务，可查看描述、交付物、验收标准、PR 边界、依赖、资源锁和估算依据；长详情可在弹窗内滚动。下图展示中文计划中的核心契约与领域设计任务：
 
-![LabFlow 中文任务详情：交付物、验收标准与相对工作量](https://raw.githubusercontent.com/zjy0481/Image/blank/labflow-detail-zh-cn-20261010T105107137Z.jpg)
+![LabFlow 中文任务详情：交付物、验收标准与相对工作量](https://raw.githubusercontent.com/zjy0481/Image/project-planner/labflow-detail-zh-cn-rehost-20261024-f4ba59bc.jpg)
 
 [演示入口](demo/labflow/README.md)列出每种语言的七份完整成果，包括已通过独立审查的[简体中文计划](demo/labflow/plan-zh-cn.md)和[英文独立计划](demo/labflow/plan-en.md)。文件分别使用 `-zh-cn` 和 `-en` 后缀；两个语言版本独立建模，不要求任务划分或估算一致。计划审查通过不表示虚构产品已经完成实施或业务验收。
 
